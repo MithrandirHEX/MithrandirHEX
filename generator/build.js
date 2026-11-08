@@ -121,6 +121,7 @@ const profile = {
   headline: pick(config.headline, live.headline),
   intro: config.intro || '',
   arsenal: config.arsenal || {},
+  about: config.about || null,
   now: config.now || '',
   website: pick(config.website, live.website),
   email: pick(config.email, live.email),

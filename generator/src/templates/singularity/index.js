@@ -4,6 +4,7 @@
 
 import { heroSvg, missionNumbers, roman, telemetrySvg, transmissionEndSvg } from './art';
 import { arsenalGroups, arsenalSvg } from './arsenal';
+import { renderAbout } from './about';
 import { renderLinks } from '../../lib/links';
 import { renderSponsorWall } from '../../lib/sponsors';
 
@@ -59,7 +60,10 @@ export function render(p) {
     '',
   ];
 
-  if (p.intro || p.now) {
+  const about = renderAbout(p);
+  if (about) {
+    out.push(about);
+  } else if (p.intro || p.now) {
     if (p.intro) out.push(`> **Mission brief.** ${p.intro}`);
     if (p.intro && p.now) out.push('>');
     if (p.now) out.push(`> **Current objective.** ${p.now}`);

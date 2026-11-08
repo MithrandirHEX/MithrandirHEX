@@ -1,11 +1,23 @@
 {
-  "_help": "Replace every (...............) with your own text. Empty strings and empty lists are simply hidden. 'links' format: [{ \"id\": \"linkedin\", \"value\": \"your-handle\" }, { \"id\": \"x\", \"value\": \"your-handle\" }, { \"id\": \"youtube\", \"value\": \"yourchannel\" }, { \"id\": \"github\", \"value\": \"...\" }]. 'featured' is a list of repository names to list under Flight log (leave empty to use your pinned repos).",
+  "_help": "Replace every (...............) with your own text. Empty strings and empty lists are hidden. 'about.icons' is optional: any emoji you set there replaces the default. 'about.connect' items show as links when 'url' starts with https://. 'links' (badges under the banner) format: [{ \"id\": \"facebook\", \"value\": \"your-handle\" }, { \"id\": \"linkedin\", \"value\": \"your-handle\" }, { \"id\": \"x\", \"value\": \"your-handle\" }, { \"id\": \"youtube\", \"value\": \"yourchannel\" }]. 'featured' is a list of repository names for Flight log (empty = your pinned repos).",
 
   "name": "MithrandirHEX",
   "headline": "Security Researcher",
 
-  "intro": "(............... 2-3 sentences: who you are, what you research, what you build ...............)",
-  "now": "(............... what you are researching or building right now ...............)",
+  "about": {
+    "role": "Security Researcher",
+    "tagline": "Passionate about uncovering software vulnerabilities, analyzing binaries, and simulating real-world attacks.",
+    "points": [
+      "I specialize in offensive security research, vulnerability analysis, and understanding how complex systems behave under the hood.",
+      "Dedicated to sharing insights, write-ups, and research tools with the cybersecurity community.",
+      "Always curious. Always exploring the unknown."
+    ],
+    "focus": "Vulnerability Research, Offensive Security",
+    "techStack": "C, C++, Python, ASM, Linux/Unix",
+    "now": "",
+    "connect": [{ "label": "Facebook", "url": "(...............)" }],
+    "icons": {}
+  },
 
   "missionName": "Operation Zero",
   "signoff": "Stay curious, stay ethical",
@@ -16,9 +28,9 @@
   "links": [],
 
   "arsenal": {
-    "languages": ["(.......)"],
+    "languages": ["C", "C++", "Python", "Assembly"],
     "tools": ["(.......)"],
-    "environments": ["(.......)"]
+    "environments": ["Linux"]
   },
 
   "featured": []
