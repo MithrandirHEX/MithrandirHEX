@@ -79,7 +79,8 @@ export function arsenalSvg(profile, themeName = 'dark') {
   const TH = 108;
   const tw = Math.floor((W - PAD * 2 - GAP * (COLS - 1)) / COLS);
 
-  let y = 86;
+  // No title bar: the README heading above the image already names the panel.
+  let y = 30;
   let delay = 0.3;
   let body = '';
   for (const [label, items] of groups) {
@@ -129,9 +130,6 @@ ${REDUCED}`;
 <style>${css}</style>
 <g class="frame">
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/>
-  <text x="${PAD}" y="46" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="3" fill="${c.hud}">ARSENAL  //  LANGUAGES &amp; TOOLS</text>
-  <text x="${W - PAD}" y="46" text-anchor="end" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="2" fill="${c.muted}">@${escapeXml(profile.login.toUpperCase())}</text>
-  <line x1="${PAD}" y1="62" x2="${W - PAD}" y2="62" stroke="${c.faint}"/>
 </g>
 ${body}
 </svg>`;

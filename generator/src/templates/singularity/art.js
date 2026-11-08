@@ -346,19 +346,19 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 
   // Streak card: total, current streak (ring with a flame) and longest streak.
   const big = (cx, value, label, sub, delay) => `<g class="ro" style="animation-delay:${delay}s">
-  <text x="${cx}" y="190" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="68" fill="${c.hud}">${value}</text>
-  <text x="${cx}" y="238" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="2" fill="${c.fg}">${label}</text>
-  <text x="${cx}" y="262" text-anchor="middle" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1" fill="${c.muted}">${sub}</text>
+  <text x="${cx}" y="192" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="78" fill="${c.hud}">${value}</text>
+  <text x="${cx}" y="244" text-anchor="middle" font-family="${MONO}" font-size="17" font-weight="700" letter-spacing="2" fill="${c.fg}">${label}</text>
+  <text x="${cx}" y="270" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.muted}">${sub}</text>
 </g>`;
   const flame = 'M12 2c.8 3.2-1.2 4.6-2.6 6.6C8 10.6 7 12.1 7 14a5 5 0 0 0 10 0c0-2-1.1-3.4-2.1-4.6-.1 1.6-.9 2.6-1.9 2.9C13.700 9.200 13.100 5.200 12 2z';
   const streakCard = `${big(226, fmt(allTotal), 'TOTAL CONTRIBUTIONS', since, 0.4)}
 <g class="ro" style="animation-delay:0.5s">
-  <circle class="ring" cx="600" cy="152" r="54" fill="none" stroke="${c.hud}" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="600" cy="98" r="17" fill="${c.bg}"/>
-  <path transform="translate(587 84) scale(1.08)" d="${flame}" fill="${c.hud}"/>
-  <text x="600" y="172" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="54" fill="${c.fg}">${fmt(cur.len)}</text>
-  <text x="600" y="238" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="2" fill="${c.hud}">CURRENT STREAK</text>
-  <text x="600" y="262" text-anchor="middle" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1" fill="${c.muted}">${range(cur)}</text>
+  <circle class="ring" cx="600" cy="154" r="56" fill="none" stroke="${c.hud}" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="600" cy="98" r="18" fill="${c.bg}"/>
+  <path transform="translate(586 83) scale(1.16)" d="${flame}" fill="${c.hud}"/>
+  <text x="600" y="176" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="60" fill="${c.fg}">${fmt(cur.len)}</text>
+  <text x="600" y="244" text-anchor="middle" font-family="${MONO}" font-size="17" font-weight="700" letter-spacing="2" fill="${c.hud}">CURRENT STREAK</text>
+  <text x="600" y="270" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.muted}">${range(cur)}</text>
 </g>
 ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 
@@ -380,7 +380,7 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   const pitch = Math.floor((W - 80) / Math.max(cols, 53));
   const cell = pitch - 4;
   const gx = 40 + Math.round((W - 80 - cols * pitch) / 2);
-  const gy = 354;
+  const gy = 372;
   const gridBottom = gy + 7 * pitch;
   const byCol = new Map();
   grid.forEach((g) => byCol.set(g.col, [...(byCol.get(g.col) || []), g]));
@@ -389,13 +389,53 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
     .map(
       ([cIdx, list]) =>
         `<g class="col" style="animation-delay:${(0.5 + cIdx * 0.012).toFixed(3)}s">${list
-          .map((g) => {
-            const [fill, op] = LV[level(g.count)];
+          .map((g, k) => {
+            const lv = level(g.count);
+            const [fill, op] = LV[lv];
             const today = g.date === todayIso;
-            return `<rect x="${gx + g.col * pitch}" y="${gy + g.wd * pitch}" width="${cell}" height="${cell}" rx="3" fill="${fill}" fill-opacity="${op}"${today ? ` stroke="${c.fg}" stroke-width="1.5"` : ''}/>`;
+            const twinkle = lv >= 2 ? ` class="lit" style="animation-delay:${((cIdx * 7 + k * 3) % 36) / 10}s"` : '';
+            return `<rect${twinkle} x="${gx + g.col * pitch}" y="${gy + g.wd * pitch}" width="${cell}" height="${cell}" rx="3" fill="${fill}" fill-opacity="${op}"${today ? ` stroke="${c.fg}" stroke-width="1.5"` : ''}/>`;
           })
           .join('')}</g>`
     )
+    .join('');
+
+  // A serpent of starlight patrols the grid: down one week, up the next, then back along the bottom edge and
+  // round again. Every segment follows the same closed path a little behind the one in front (a negative
+  // `begin` puts it that far ahead of the tail), so the body keeps its shape and the loop has no seam.
+  const cx0 = gx + cell / 2;
+  const cyTop = gy + cell / 2;
+  const cyBot = gy + 6 * pitch + cell / 2;
+  const cyBelow = cyBot + pitch;
+  const marginX = cx0 - pitch;
+  const startY = (cols - 1) % 2 === 0 ? cyTop : cyBot;
+  const pts = [];
+  for (let k = 0; k < cols; k += 1) {
+    const x = cx0 + k * pitch;
+    const down = (cols - 1 - k) % 2 === 0;
+    const y0 = down ? cyTop : cyBot;
+    const y1 = down ? cyBot : cyTop;
+    if (k === 0) pts.push([x, y0]);
+    pts.push([x, y1]);
+    if (k < cols - 1) pts.push([x + pitch, y1]);
+  }
+  pts.push([cx0 + (cols - 1) * pitch, cyBelow], [marginX, cyBelow], [marginX, startY], [cx0, startY]);
+  const pathLen = pts.reduce((sum, p, i) => (i ? sum + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
+  const path = `M${pts.map((p) => `${r1(p[0])} ${r1(p[1])}`).join('L')}`;
+  const LAP = 40;
+  const SEG = 10;
+  const lag = (pitch / pathLen) * LAP;
+  const snake = Array.from({ length: SEG }, (_, i) => {
+    const head = i === 0;
+    const begin = i === SEG - 1 ? '0s' : `-${((SEG - 1 - i) * lag).toFixed(3)}s`;
+    const op = head ? 1 : Math.max(0.22, 0.95 - i * 0.085);
+    return `<g><animateMotion dur="${LAP}s" begin="${begin}" repeatCount="indefinite" path="${path}"/>${
+      head ? `<rect x="${-cell}" y="${-cell}" width="${cell * 2}" height="${cell * 2}" rx="${cell / 2}" fill="${c.diskMid}" fill-opacity="0.3"/>` : ''
+    }<rect x="${-cell / 2}" y="${-cell / 2}" width="${cell}" height="${cell}" rx="3" fill="${head ? c.diskHi : c.hud}" fill-opacity="${op.toFixed(2)}"/>${
+      head ? `<circle cx="${r1(cell * 0.18)}" cy="${r1(-cell * 0.12)}" r="1.6" fill="${c.bg}"/>` : ''
+    }</g>`;
+  })
+    .reverse()
     .join('');
 
   // Month labels above the grid; a label is dropped when the next month starts less than 3 columns later.
@@ -410,19 +450,19 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   }
   const monthLabels = monthMarks
     .filter((mk, i) => !monthMarks[i + 1] || monthMarks[i + 1].cIdx - mk.cIdx >= 3)
-    .map((mk) => `<text x="${gx + mk.cIdx * pitch}" y="${gy - 12}" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="1" fill="${c.muted}">${MON[mk.m]}</text>`)
+    .map((mk) => `<text x="${gx + mk.cIdx * pitch}" y="${gy - 14}" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="1" fill="${c.muted}">${MON[mk.m]}</text>`)
     .join('');
 
-  const legendY = gridBottom + 26;
-  const legendX = W - 40 - 44 - 5 * pitch;
-  const legend = `<text x="${legendX - 8}" y="${legendY + cell - 3}" text-anchor="end" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="1" fill="${c.muted}">LESS</text>${LV.map(
+  const legendY = gridBottom + 30;
+  const legendX = W - 40 - 56 - 5 * pitch;
+  const legend = `<text x="${legendX - 8}" y="${legendY + cell - 2}" text-anchor="end" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="1" fill="${c.muted}">LESS</text>${LV.map(
     ([fill, op], k) => `<rect x="${legendX + k * pitch}" y="${legendY}" width="${cell}" height="${cell}" rx="3" fill="${fill}" fill-opacity="${op}"/>`
-  ).join('')}<text x="${W - 40}" y="${legendY + cell - 3}" text-anchor="end" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="1" fill="${c.muted}">MORE</text>`;
+  ).join('')}<text x="${W - 40}" y="${legendY + cell - 2}" text-anchor="end" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="1" fill="${c.muted}">MORE</text>`;
 
   // Row of figures under the grid.
-  const dividerY = legendY + cell + 22;
-  const valY = dividerY + 50;
-  const labY = valY + 26;
+  const dividerY = legendY + cell + 24;
+  const valY = dividerY + 56;
+  const labY = valY + 28;
   const figures = [
     ['STARS', fmt(n.stars)],
     ['COMMITS · 12 MO', fmt(profile.commits || 0)],
@@ -435,9 +475,9 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   const figureSvg = figures
     .map(([label, value], k) => {
       const x = 40 + k * fw;
-      return `<g class="ro" style="animation-delay:${(1 + k * 0.08).toFixed(2)}s">${k ? `<line x1="${r1(x - 14)}" y1="${valY - 34}" x2="${r1(x - 14)}" y2="${labY + 6}" stroke="${c.faint}"/>` : ''}
-  <text x="${r1(x)}" y="${valY}" font-family="${THIN}" font-weight="700" font-size="36" fill="${c.fg}">${value}</text>
-  <text x="${r1(x)}" y="${labY}" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1.5" fill="${c.muted}">${label}</text>
+      return `<g class="ro" style="animation-delay:${(1 + k * 0.08).toFixed(2)}s">${k ? `<line x1="${r1(x - 14)}" y1="${valY - 40}" x2="${r1(x - 14)}" y2="${labY + 8}" stroke="${c.faint}"/>` : ''}
+  <text x="${r1(x)}" y="${valY}" font-family="${THIN}" font-weight="700" font-size="44" fill="${c.fg}">${value}</text>
+  <text x="${r1(x)}" y="${labY}" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1.2" fill="${c.muted}">${label}</text>
 </g>`;
     })
     .join('');
@@ -445,37 +485,43 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   // Top languages: only when GitHub has found code in the public repositories.
   const langs = (profile.languages || []).filter((l) => l.share >= 0.01).slice(0, 6);
   let languages = '';
-  let H = labY + 30;
+  let H = labY + 34;
   if (langs.length) {
-    const ly = labY + 24;
+    const ly = labY + 28;
     const sw = W - 80;
     const shades = [1, 0.74, 0.54, 0.4, 0.28, 0.18];
     let cursor = 40;
     const parts = langs
       .map((l, k) => {
         const w = Math.max(4, l.share * sw - 3);
-        const seg = `<g class="seg" style="animation-delay:${(1.2 + k * 0.1).toFixed(2)}s"><rect x="${r1(cursor)}" y="${ly + 36}" width="${r1(w)}" height="10" rx="3" fill="${c.hud}" fill-opacity="${shades[k] ?? 0.12}"/>${
-          w > 110
-            ? `<text x="${r1(cursor)}" y="${ly + 70}" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1" fill="${c.fg}">${escapeXml(l.name.toUpperCase())} ${Math.round(l.share * 100)}%</text>`
+        const seg = `<g class="seg" style="animation-delay:${(1.2 + k * 0.1).toFixed(2)}s"><rect x="${r1(cursor)}" y="${ly + 40}" width="${r1(w)}" height="12" rx="3" fill="${c.hud}" fill-opacity="${shades[k] ?? 0.12}"/>${
+          w > 120
+            ? `<text x="${r1(cursor)}" y="${ly + 78}" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.fg}">${escapeXml(l.name.toUpperCase())} ${Math.round(l.share * 100)}%</text>`
             : ''
         }</g>`;
         cursor += w + 3;
         return seg;
       })
       .join('');
-    languages = `<line x1="40" y1="${ly - 6}" x2="${W - 40}" y2="${ly - 6}" stroke="${c.faint}"/><text x="40" y="${ly + 22}" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="3" fill="${c.muted}">TOP LANGUAGES</text>${parts}`;
-    H = ly + 96;
+    languages = `<line x1="40" y1="${ly - 6}" x2="${W - 40}" y2="${ly - 6}" stroke="${c.faint}"/><text x="40" y="${ly + 24}" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="3" fill="${c.muted}">TOP LANGUAGES</text>${parts}`;
+    H = ly + 104;
   }
+  // The README heading above the image already names the panel, so the image has no title bar of its own:
+  // everything moves up by SHIFT and the image gets that much shorter.
+  const SHIFT = 52;
+  H -= SHIFT;
 
   const css = `
 .frame{animation:fade 1s ease-out both}
 .ro{animation:rise .9s ${EXPO} both}
 .col{animation:fade .6s ease-out both}
-.ring{stroke-dasharray:340;animation:ring 1.4s ease-out .4s both}
+.lit{animation:twinkle 3.6s ease-in-out infinite}
+.ring{stroke-dasharray:352;animation:ring 1.4s ease-out .4s both}
 .seg{transform-box:fill-box;transform-origin:left center;animation:growX 1s ${EXPO} both}
 @keyframes fade{from{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
-@keyframes ring{from{stroke-dashoffset:340}}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.62}}
+@keyframes ring{from{stroke-dashoffset:352}}
 @keyframes growX{from{transform:scaleX(0)}}
 ${REDUCED}`;
 
@@ -483,23 +529,23 @@ ${REDUCED}`;
     `GitHub stats: ${fmt(allTotal)} total contributions, current streak ${cur.len} days, longest streak ${longest.len} days. ${fmt(n.total)} contributions in the last 12 months, ${fmt(profile.commits || 0)} commits, ${fmt(profile.pullRequests || 0)} pull requests, ${fmt(profile.issues || 0)} issues, ${fmt(n.stars)} stars, ${fmt(profile.publicRepos || 0)} public repositories.`
   )}">
 <style>${css}</style>
+<g class="frame"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/></g>
+<g transform="translate(0 ${-SHIFT})">
 <g class="frame">
-  <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/>
-  <text x="40" y="46" font-family="${MONO}" font-size="16" font-weight="700" letter-spacing="3" fill="${c.hud}">GITHUB  STATS</text>
-  <text x="${W - 40}" y="46" text-anchor="end" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="2" fill="${c.muted}">${escapeXml(missionName.toUpperCase())}  ·  @${escapeXml(profile.login.toUpperCase())}</text>
-  <line x1="40" y1="64" x2="${W - 40}" y2="64" stroke="${c.faint}"/>
-  <line x1="413" y1="92" x2="413" y2="268" stroke="${c.faint}"/>
-  <line x1="787" y1="92" x2="787" y2="268" stroke="${c.faint}"/>
-  <line x1="40" y1="290" x2="${W - 40}" y2="290" stroke="${c.faint}"/>
-  <text x="40" y="318" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="3" fill="${c.muted}">CONTRIBUTIONS  ·  LAST 12 MONTHS</text>
+  <line x1="413" y1="92" x2="413" y2="278" stroke="${c.faint}"/>
+  <line x1="787" y1="92" x2="787" y2="278" stroke="${c.faint}"/>
+  <line x1="40" y1="302" x2="${W - 40}" y2="302" stroke="${c.faint}"/>
+  <text x="40" y="332" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="3" fill="${c.muted}">CONTRIBUTIONS  ·  LAST 12 MONTHS</text>
   ${monthLabels}
   <line x1="40" y1="${dividerY}" x2="${W - 40}" y2="${dividerY}" stroke="${c.faint}"/>
 </g>
 ${streakCard}
 ${cells}
+${snake}
 ${legend}
 ${figureSvg}
 ${languages}
+</g>
 </svg>`;
 }
 
