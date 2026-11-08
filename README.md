@@ -1,9 +1,4 @@
-<p align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/singularity-hero-dark.svg">
-  <img alt="MithrandirHEX: Red Team Operator | Vulnerability Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 7 contributions, one particle per day." src="./assets/singularity-hero-light.svg" width="100%">
-</picture>
-</p>
+<p align="center"><img alt="MithrandirHEX: Red Team Operator | Vulnerability Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 8 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
 
 <p align="center"><b>MithrandirHEX</b> · Red Team Operator | Vulnerability Researcher</p>
 
@@ -14,12 +9,7 @@
 
 #### Telemetry
 
-<p align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/singularity-telemetry-dark.svg">
-  <img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 7 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-light.svg" width="100%">
-</picture>
-</p>
+<p align="center"><img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 8 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
 
 <details>
 <summary><sub>Reading the instruments</sub></summary>
@@ -33,9 +23,4 @@
 
 </details>
 
-<p align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/singularity-end-dark.svg">
-  <img alt="End of transmission. Stay curious, stay ethical." src="./assets/singularity-end-light.svg" width="100%">
-</picture>
-</p>
+<p align="center"><img alt="End of transmission. Stay curious, stay ethical." src="./assets/singularity-end-dark.svg" width="100%"></p>
