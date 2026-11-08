@@ -31,7 +31,7 @@ export const THEMES = {
     hud: '#7dd3fc',
     faint: '#1b2231',
     bar: '#000000',
-    barText: '#c3c7d2',
+    barText: '#f1f3f9',
     shadow: '#000000',
     diskLo: '#8a5527',
     diskMid: '#ffb257',
@@ -243,14 +243,14 @@ ${REDUCED}`;
   </g>
   <g class="bar-top">
     <rect width="${W}" height="${BAR}" fill="${c.bar}"/>
-    <g class="hud" font-family="${MONO}" font-size="12" letter-spacing="3" fill="${c.barText}">
+    <g class="hud" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="2.5" fill="${c.barText}">
       <text x="36" y="34">CLASSIFIED  //  EYES ONLY  //  ${escapeXml(missionName.toUpperCase())}</text>
       <text x="${W - 36}" y="34" text-anchor="end">T+ ${n.years} YR  ·  @${escapeXml(profile.login.toUpperCase())}</text>
     </g>
   </g>
   <g class="bar-bot">
     <rect y="${H - BAR}" width="${W}" height="${BAR}" fill="${c.bar}"/>
-    <text class="hud" x="${cx}" y="${H - 23}" text-anchor="middle" font-family="${MONO}" font-size="12" letter-spacing="2.5" fill="${c.barText}">${bottomLine}</text>
+    <text class="hud" x="${cx}" y="${H - 23}" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="2" fill="${c.barText}">${bottomLine}</text>
   </g>
 </g>
 </svg>`;
