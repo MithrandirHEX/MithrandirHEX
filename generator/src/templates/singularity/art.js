@@ -121,8 +121,11 @@ export function heroSvg(profile, themeName, { missionName }) {
     const big = rand() > 0.93;
     const r = r1(big ? 1.2 + rand() * 0.8 : 0.4 + rand() * 0.7);
     const o = (0.25 + rand() * 0.7).toFixed(2);
-    if (i % 9 === 0) {
-      twinklers += `<circle class="tw" style="animation-delay:${(rand() * 4).toFixed(2)}s" cx="${x}" cy="${y}" r="${r}" fill="${c.star}" opacity="${o}"/>`;
+    if (i % 3 === 0) {
+      twinklers += `<circle class="tw" style="animation-duration:${(1.4 + rand() * 3).toFixed(2)}s;animation-delay:${(rand() * 4).toFixed(2)}s" cx="${x}" cy="${y}" r="${r1(r * 1.15)}" fill="${c.star}" opacity="${o}"/>`;
+    } else if (i % 21 === 1) {
+      const s = (3.5 + rand() * 4).toFixed(1);
+      twinklers += `<g transform="translate(${x} ${y})"><path class="sp" style="animation-duration:${(2 + rand() * 2.5).toFixed(2)}s;animation-delay:${(rand() * 4).toFixed(2)}s" d="M0 -${s}V${s}M-${s} 0H${s}" stroke="${c.fg}" stroke-width="1.1" stroke-linecap="round" fill="none"/></g>`;
     } else {
       stars += `<circle cx="${x}" cy="${y}" r="${r}" opacity="${o}"/>`;
     }
@@ -203,6 +206,8 @@ export function heroSvg(profile, themeName, { missionName }) {
 .hud{animation:fade 1.2s ease-out 2s both}
 .spin{animation-name:spin;animation-timing-function:linear;animation-iteration-count:infinite}
 .s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}.s3{animation-duration:90s}.tw{animation:twinkle 4.5s ease-in-out infinite}
+.sp{opacity:0;transform-box:fill-box;transform-origin:center;animation:sparkle 3s ease-in-out infinite}
+@keyframes sparkle{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.15)}}
 .n1{animation:drift1 22s ease-in-out infinite alternate}.n2{animation:drift2 28s ease-in-out infinite alternate}.n3{animation:drift3 18s ease-in-out infinite alternate}
 .shoot{opacity:0;animation-timing-function:linear;animation-iteration-count:infinite}
 .sa{animation-name:shootA}.sb{animation-name:shootB}.sc{animation-name:shootC}
@@ -211,7 +216,7 @@ export function heroSvg(profile, themeName, { missionName }) {
 @keyframes barTop{from{transform:translateY(-${BAR}px)}}
 @keyframes barBot{from{transform:translateY(${BAR}px)}}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
-@keyframes spin{to{transform:rotate(360deg)}}@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes twinkle{0%,100%{opacity:1}35%{opacity:.08}60%{opacity:.9}80%{opacity:.25}}
 @keyframes drift1{to{transform:translate(170px,60px)}}
 @keyframes drift2{to{transform:translate(-150px,-55px)}}
 @keyframes drift3{to{transform:translate(110px,48px)}}
@@ -393,9 +398,12 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 <g class="ro" style="animation-delay:0.5s">
   <circle class="ring" cx="600" cy="154" r="56" fill="none" stroke="${c.hud}" stroke-width="6" stroke-linecap="round"/>
   <circle cx="600" cy="98" r="28" fill="${c.bg}"/>
-  <g${fx.flame ? ' class="flame"' : ''}>
-    <path transform="translate(571 62) scale(2.4)" d="${flame}" fill="url(#flameGrad)"/>
-    <path class="flame2" transform="translate(588 84) scale(1.0)" d="${flame}" fill="url(#flameCore)" style="transform-box:fill-box;transform-origin:center bottom"/>
+  <g>
+    <circle class="${fx.flame ? 'fglow' : ''}" cx="600" cy="92" r="30" fill="url(#flameGlow)"/>
+    <g transform="translate(571 62) scale(2.4)"><path class="${fx.flame ? 'f1' : ''}" d="${flame}" fill="url(#flameGrad)"/></g>
+    <g transform="translate(579.6 75.3) scale(1.7)"><path class="${fx.flame ? 'f2' : ''}" d="${flame}" fill="url(#flameMid)"/></g>
+    <g transform="translate(588 88.6) scale(1)"><path class="${fx.flame ? 'f3' : ''}" d="${flame}" fill="url(#flameCore)"/></g>
+    ${fx.flame ? [[594, 0], [604, 0.7], [599, 1.3], [608, 1.9]].map(([x, d]) => `<circle class="ember" style="animation-delay:${d}s" cx="${x}" cy="70" r="1.6" fill="#ffd25a"/>`).join('') : ''}
   </g>
   <text x="600" y="176" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="60" fill="${c.fg}">${fmt(cur.len)}</text>
   <text x="600" y="244" text-anchor="middle" font-family="${MONO}" font-size="17" font-weight="700" letter-spacing="2" fill="${c.hud}">CURRENT STREAK</text>
@@ -625,7 +633,17 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 .lit{animation:twinkle 3.6s ease-in-out infinite}
 .flame{transform-box:fill-box;transform-origin:center bottom;animation:flicker 1.7s ease-in-out infinite}
 .rip{opacity:0;transform-box:fill-box;transform-origin:center;animation:ripple 7s ease-out infinite}
-.flame2{animation:flicker2 .9s ease-in-out infinite}
+.f1,.f2,.f3{transform-box:fill-box;transform-origin:center bottom}
+.f1{animation:fk1 .83s linear infinite}
+.f2{animation:fk2 .57s linear infinite}
+.f3{animation:fk3 .41s linear infinite}
+.fglow{animation:fglow .7s ease-in-out infinite}
+.ember{opacity:0;animation:ember 2.4s ease-out infinite}
+@keyframes fk1{0%{transform:scale(1,1)}18%{transform:scale(.92,1.13)}37%{transform:scale(1.07,.88)}58%{transform:scale(.95,1.17)}79%{transform:scale(1.05,.94)}100%{transform:scale(1,1)}}
+@keyframes fk2{0%{transform:scale(1,1)}25%{transform:scale(1.1,.86)}45%{transform:scale(.88,1.2)}70%{transform:scale(1.06,.92)}100%{transform:scale(1,1)}}
+@keyframes fk3{0%{transform:scale(1,1)}20%{transform:scale(.8,1.25)}50%{transform:scale(1.15,.82)}75%{transform:scale(.9,1.15)}100%{transform:scale(1,1)}}
+@keyframes fglow{0%,100%{opacity:.55}30%{opacity:1}60%{opacity:.4}80%{opacity:.9}}
+@keyframes ember{0%{opacity:0;transform:translate(0,14px)}15%{opacity:1}100%{opacity:0;transform:translate(3px,-16px)}}
 .fl{opacity:0;transform-box:fill-box;transform-origin:center;animation:flash ${PERIOD}s linear infinite}
 .shoot{opacity:0;animation-timing-function:linear;animation-iteration-count:infinite}
 .sa{animation-name:shootA}.sb{animation-name:shootB}.sc{animation-name:shootC}
@@ -661,6 +679,8 @@ ${REDUCED}`;
     <stop offset="0.55" stop-color="#ff9a1f"><animate attributeName="stop-color" values="#ff9a1f;#ffc23d;#ff9a1f" dur="1.7s" repeatCount="indefinite"/></stop>
     <stop offset="1" stop-color="#ffe066"/>
   </linearGradient>
+  <radialGradient id="flameGlow"><stop offset="0" stop-color="#ff8a1f" stop-opacity="0.45"/><stop offset="1" stop-color="#ff8a1f" stop-opacity="0"/></radialGradient>
+  <linearGradient id="flameMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a1f"/><stop offset="1" stop-color="#ffe27a"/></linearGradient>
   <linearGradient id="flameCore" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd25a"/><stop offset="1" stop-color="#fffbe6"/></linearGradient>
   <linearGradient id="shootTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-120" y2="-52"><stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/></linearGradient>
   <linearGradient id="cometTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${ctx}" y2="${cty}"><stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/></linearGradient>
