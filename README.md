@@ -29,7 +29,7 @@
 
 ## 🧰 Languages & Tools
 
-<p align="center"><img alt="Languages and tools: C, C++, Python, Assembly, (.......), Linux." src="./assets/singularity-arsenal-dark.svg" width="100%"></p>
+<p align="center"><img alt="Languages and tools: C, C++, Python, Assembly, Java, PHP, Go, Docker, Node.js, React, Next.js, Linux, Windows." src="./assets/singularity-arsenal-dark.svg" width="100%"></p>
 
 <p align="center"><img alt="" src="./assets/singularity-divider-dark.svg" width="100%"></p>
 
