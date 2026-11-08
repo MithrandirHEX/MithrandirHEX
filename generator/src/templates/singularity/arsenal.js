@@ -16,7 +16,7 @@ const REDUCED = '@media (prefers-reduced-motion: reduce) { * { animation: none !
 
 const GROUPS = [
   ['languages', 'LANGUAGES'],
-  ['tools', 'TOOLS'],
+  ['tools', 'TOOLS & FRAMEWORKS'],
   ['environments', 'ENVIRONMENTS'],
 ];
 
@@ -43,12 +43,21 @@ const ALIASES = {
   postgres: 'postgresql',
   burp: 'burpsuite',
   gdb: 'gnu',
+  next: 'nextdotjs',
+  nextjs: 'nextdotjs',
+  reactjs: 'react',
+};
+
+// Logos that Simple Icons no longer ships.
+const CUSTOM = {
+  windows: { hex: '0078D4', path: 'M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801' },
 };
 
 const entryName = (item) => String(typeof item === 'string' ? item : item?.name ?? '').trim();
 
 function findIcon(item) {
   const name = entryName(item);
+  if (CUSTOM[slug(name)]) return CUSTOM[slug(name)];
   const wanted = typeof item === 'object' && item?.icon ? slug(item.icon) : ALIASES[slug(name)] || slug(name);
   if (!wanted) return null;
   return simpleIcons[`si${wanted.charAt(0).toUpperCase()}${wanted.slice(1)}`] || null;
@@ -64,7 +73,8 @@ function luminance(hex) {
 
 export function arsenalGroups(profile) {
   const a = profile.arsenal || {};
-  return GROUPS.map(([key, label]) => [label, (a[key] || []).filter((item) => entryName(item))]).filter(([, items]) => items.length);
+  // Placeholders such as "(.......)" are hidden, so an unfilled group never shows an empty dashed tile.
+  return GROUPS.map(([key, label]) => [label, (a[key] || []).filter((item) => entryName(item) && !entryName(item).startsWith('('))]).filter(([, items]) => items.length);
 }
 
 export function arsenalSvg(profile, themeName = 'dark') {
@@ -72,58 +82,66 @@ export function arsenalSvg(profile, themeName = 'dark') {
   if (!groups.length) return null;
   const c = THEMES[themeName];
 
+  // Groups sit side by side, each a block of tiles two (or three) rows high, so the panel is filled evenly.
   const W = 1200;
   const PAD = 40;
   const GAP = 12;
-  const COLS = 6;
-  const TH = 108;
-  const tw = Math.floor((W - PAD * 2 - GAP * (COLS - 1)) / COLS);
+  const GGAP = 40;
+  const TH = 128;
+  const total = groups.reduce((sum, [, items]) => sum + items.length, 0);
+  const ROWS = total > 20 ? 3 : 2;
+  const colsOf = groups.map(([, items]) => Math.max(1, Math.ceil(items.length / ROWS)));
+  const sumCols = colsOf.reduce((a, b) => a + b, 0);
+  const tw = Math.floor((W - PAD * 2 - GGAP * (groups.length - 1) - GAP * (sumCols - groups.length)) / sumCols);
 
-  // No title bar: the README heading above the image already names the panel.
-  let y = 30;
-  let delay = 0.3;
+  const top = 30;
+  const tilesTop = top + 28;
+  const SWEEP = 6;
   let body = '';
-  for (const [label, items] of groups) {
-    body += `<text x="${PAD}" y="${y + 6}" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="3" fill="${c.muted}">${label}</text>`;
-    y += 22;
+  let delay = 0.3;
+  let x0 = PAD;
+  groups.forEach(([label, items], gi) => {
+    const gw = colsOf[gi] * tw + (colsOf[gi] - 1) * GAP;
+    body += `<text x="${x0}" y="${top + 8}" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="3" fill="${c.hud}">${escapeXml(label)}</text><line x1="${x0}" y1="${top + 18}" x2="${x0 + gw}" y2="${top + 18}" stroke="${c.faint}" stroke-width="2"/><line x1="${x0}" y1="${top + 18}" x2="${x0 + Math.min(gw, 56)}" y2="${top + 18}" stroke="${c.hud}" stroke-width="2"/>`;
     items.forEach((item, i) => {
-      const x = PAD + (i % COLS) * (tw + GAP);
-      const ty = y + Math.floor(i / COLS) * (TH + GAP);
+      const x = x0 + (i % colsOf[gi]) * (tw + GAP);
+      const ty = tilesTop + Math.floor(i / colsOf[gi]) * (TH + GAP);
       const name = entryName(item);
-      const placeholder = name.startsWith('(');
-      const icon = placeholder ? null : findIcon(item);
+      const icon = findIcon(item);
       const cx = x + tw / 2;
       let mark;
       if (icon) {
         const color = luminance(icon.hex) < 0.12 ? c.fg : `#${icon.hex}`;
-        mark = `<g transform="translate(${cx - 20} ${ty + 18}) scale(1.6667)"><path d="${icon.path}" fill="${color}"/></g>`;
-      } else if (placeholder) {
-        mark = '';
+        mark = `<g transform="translate(${cx - 26} ${ty + 20}) scale(2.1667)"><path d="${icon.path}" fill="${color}"/></g>`;
       } else {
         const mono = escapeXml(name.replace(/[^A-Za-z0-9+#]/g, '').slice(0, 2).toUpperCase() || '?');
-        mark = `<rect x="${cx - 20}" y="${ty + 18}" width="40" height="40" rx="9" fill="none" stroke="${c.hud}" stroke-opacity="0.55" stroke-width="1.5"/><text x="${cx}" y="${ty + 45}" text-anchor="middle" font-family="${MONO}" font-size="16" font-weight="700" fill="${c.fg}">${mono}</text>`;
+        mark = `<rect x="${cx - 26}" y="${ty + 20}" width="52" height="52" rx="11" fill="none" stroke="${c.hud}" stroke-opacity="0.6" stroke-width="2"/><text x="${cx}" y="${ty + 55}" text-anchor="middle" font-family="${MONO}" font-size="20" font-weight="700" fill="${c.fg}">${mono}</text>`;
       }
-      const size = name.length > 16 ? 10.5 : 12;
-      const labelY = placeholder ? ty + TH / 2 + 4 : ty + 88;
+      const size = name.length > 12 ? 13 : 15;
+      const glint = (((x - PAD) / (W - PAD * 2)) * SWEEP).toFixed(2);
       body += `<g class="ro" style="animation-delay:${delay.toFixed(2)}s">
-  <rect x="${x}" y="${ty}" width="${tw}" height="${TH}" rx="10" fill="${c.faint}" fill-opacity="${placeholder ? 0 : 0.28}" stroke="${placeholder ? c.hud : c.faint}" stroke-opacity="${placeholder ? 0.35 : 1}"${placeholder ? ' stroke-dasharray="4 4"' : ''}/>
-  ${mark}
-  <text x="${cx}" y="${labelY}" text-anchor="middle" font-family="${MONO}" font-size="${size}" font-weight="700" fill="${placeholder ? c.muted : c.fg}">${escapeXml(name)}</text>
+  <rect x="${x}" y="${ty}" width="${tw}" height="${TH}" rx="12" fill="${c.faint}" fill-opacity="0.3" stroke="${c.faint}"/>
+  <g class="bob" style="animation-delay:-${((i * 1.3 + gi * 0.7) % 4.5).toFixed(1)}s">${mark}</g>
+  <text x="${cx}" y="${ty + 108}" text-anchor="middle" font-family="${MONO}" font-size="${size}" font-weight="700" fill="${c.fg}">${escapeXml(name)}</text>
+  <rect class="glint" x="${x}" y="${ty}" width="${tw}" height="${TH}" rx="12" fill="none" stroke="${c.hud}" stroke-width="2" style="animation-delay:${glint}s"/>
 </g>`;
       delay += 0.04;
     });
-    y += Math.ceil(items.length / COLS) * (TH + GAP) + 8;
-  }
-  const H = y + 14;
+    x0 += gw + GGAP;
+  });
+  const H = tilesTop + ROWS * TH + (ROWS - 1) * GAP + 28;
 
   const css = `
 .frame{animation:fade 1s ease-out both}
 .ro{animation:rise .9s ${EXPO} both}
+.bob{animation:bob 4.5s ease-in-out infinite alternate}
+.glint{opacity:0;animation:glint ${SWEEP + 3}s linear infinite}
 @keyframes fade{from{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+@keyframes glint{0%{opacity:0}5%{opacity:1}22%,100%{opacity:0}}
 ${REDUCED}`;
 
-  const total = groups.reduce((sum, [, items]) => sum + items.length, 0);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
     `Languages and tools: ${groups.map(([label, items]) => `${label.toLowerCase()}: ${items.map(entryName).join(', ')}`).join('; ')}. ${total} entries.`
   )}">

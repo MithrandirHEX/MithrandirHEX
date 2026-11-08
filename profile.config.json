@@ -45,9 +45,9 @@
   "links": [],
 
   "arsenal": {
-    "languages": ["C", "C++", "Python", "Assembly"],
-    "tools": ["(.......)"],
-    "environments": ["Linux"]
+    "languages": ["C", "C++", "Python", "Assembly", "Java", "PHP", "Go"],
+    "tools": ["Docker", "Node.js", "React", "Next.js"],
+    "environments": ["Linux", "Windows"]
   },
 
   "featured": []
