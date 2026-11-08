@@ -74,7 +74,7 @@ export function render(p) {
   if (arsenal) {
     const names = arsenalGroups(p).flatMap(([, items]) => items.map((i) => (typeof i === 'string' ? i : i.name)));
     out.push(
-      '#### Languages & Tools',
+      '## 🧰 Languages & Tools',
       '',
       picture(ASSETS.arsenalDark, ASSETS.arsenalDark, `Languages and tools: ${names.join(', ')}.`),
       ''
@@ -82,7 +82,7 @@ export function render(p) {
   }
 
   out.push(
-    '#### Recon',
+    '## 📊 Recon',
     '',
     picture(
       ASSETS.telemetryDark,
@@ -104,7 +104,7 @@ export function render(p) {
   );
 
   if (featured.length) {
-    out.push('#### Flight log', '');
+    out.push('## 🪐 Flight log', '');
     featured.forEach((repo, i) => {
       out.push(`- \`MSN-${String(i + 1).padStart(2, '0')}\` **[${repo.name}](${repo.url})**${repo.description ? ` · ${repo.description}` : ''}  `);
       const meta = [repo.language, repo.stars ? `★ ${repo.stars >= 1000 ? `${(repo.stars / 1000).toFixed(1)}k` : repo.stars}` : '']

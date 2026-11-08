@@ -32,8 +32,9 @@ export function renderAbout(p) {
   if (!a) return '';
   const icons = { ...DEFAULT_ICONS, ...(a.icons || {}) };
 
-  const lines = [`### ${icons.heading} About Me`, ''];
-  if (a.role) lines.push(`${icons.role} **${a.role}**`, '');
+  // Heading levels are the only way to size text in a GitHub README: h2 for the section, h3 for the role.
+  const lines = [`## ${icons.heading} About Me`, ''];
+  if (a.role) lines.push(`### ${icons.role} ${a.role}`, '');
   if (a.tagline) lines.push(`> ${icons.tagline} ${a.tagline}`, '');
   const points = (a.points || []).filter(Boolean);
   if (points.length) lines.push(...points.map((x) => `- ${x}`), '');
