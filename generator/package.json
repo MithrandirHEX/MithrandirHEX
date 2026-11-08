@@ -1,0 +1,17 @@
+{
+  "name": "profile-generator",
+  "private": true,
+  "type": "module",
+  "description": "Regenerates the profile README and SVG assets from live GitHub data",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "esbuild build.js --bundle --platform=node --format=esm --outfile=dist/build.mjs",
+    "generate": "npm run build && node dist/build.mjs .."
+  },
+  "dependencies": {
+    "simple-icons": "16.36.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}
