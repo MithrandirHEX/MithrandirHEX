@@ -28,6 +28,9 @@ query ($login: String!) {
         languages(first: 10, orderBy: { field: SIZE, direction: DESC }) { edges { size node { name } } }
       }
     }
+    allRepos: repositories(first: 100, ownerAffiliations: OWNER, privacy: PUBLIC, orderBy: { field: PUSHED_AT, direction: DESC }) {
+      nodes { name stargazerCount isFork }
+    }
     contributionsCollection {
       contributionCalendar { totalContributions weeks { contributionDays { date contributionCount } } }
     }
@@ -77,8 +80,10 @@ async function fetchLive() {
     followers: u.followers.totalCount,
     totalStars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     repos: candidates,
-    // Every public, non-fork repository (profile repo excluded): one point each on the accretion disk.
-    repoPoints: repos.map((r) => ({ name: r.name, stars: r.stargazerCount })),
+    // Every public repository, forks included (profile repo excluded): one point each on the accretion disk.
+    repoPoints: u.allRepos.nodes
+      .filter((r) => r.name.toLowerCase() !== u.login.toLowerCase())
+      .map((r) => ({ name: r.name, stars: r.stargazerCount })),
     featured: candidates.slice(0, 4).map((r) => r.name),
     languages,
     contributions: { total: u.contributionsCollection.contributionCalendar.totalContributions, days },
