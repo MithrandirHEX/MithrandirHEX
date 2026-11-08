@@ -28,7 +28,7 @@ export const THEMES = {
     bg: '#04050a',
     fg: '#f4f1ea',
     muted: '#b8bed0',
-    hud: '#7dd3fc',
+    hud: '#ffb257',
     faint: '#1b2231',
     bar: '#000000',
     barText: '#f1f3f9',
@@ -299,10 +299,10 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   const maxMonth = Math.max(1, ...months.map((m) => m.total));
   const busiest = months.reduce((best, m, i) => (m.total > months[best].total ? i : best), 0);
 
-  // Orbit plot: one vertex per month, radius by that month's contributions.
-  const ox = 236;
-  const oy = 244;
-  const R = 132;
+  // Activity radar: one vertex per month, radius by that month's contributions.
+  const ox = 230;
+  const oy = 252;
+  const R = 140;
   const angleOf = (i) => ((-90 + (i * 360) / months.length) * Math.PI) / 180;
   const pts = months.map((m, i) => {
     const r = 30 + (R - 30) * Math.sqrt(m.total / maxMonth);
@@ -314,56 +314,54 @@ export function telemetrySvg(profile, themeName, { missionName }) {
     .map((m, i) => {
       const a = angleOf(i);
       const lx = ox + Math.cos(a) * (R + 18);
-      const ly = oy + Math.sin(a) * (R + 18) + 3.5;
-      return `<line x1="${ox}" y1="${oy}" x2="${r1(ox + Math.cos(a) * R)}" y2="${r1(oy + Math.sin(a) * R)}" stroke="${c.faint}"/><text x="${r1(lx)}" y="${r1(ly)}" text-anchor="middle" font-family="${MONO}" font-size="10" letter-spacing="1" fill="${i === busiest ? c.hud : c.muted}">${m.label}</text>`;
+      const ly = oy + Math.sin(a) * (R + 18) + 4;
+      const hot = i === busiest;
+      return `<line x1="${ox}" y1="${oy}" x2="${r1(ox + Math.cos(a) * R)}" y2="${r1(oy + Math.sin(a) * R)}" stroke="${c.faint}"/><text x="${r1(lx)}" y="${r1(ly)}" text-anchor="middle" font-family="${MONO}" font-size="12" font-weight="${hot ? 700 : 400}" letter-spacing="1" fill="${hot ? c.hud : c.muted}">${m.label}</text>`;
     })
     .join('');
   const peak = pts[busiest];
 
-  // Readouts.
-  const readouts = [
-    ['MISSION ELAPSED', fmt(n.years), 'YEARS ON GITHUB'],
-    ['DISTANCE', fmt(n.total), 'CONTRIBUTIONS · 12 MO'],
-    ['DAYS IN GRID', fmt(n.active), 'ACTIVE DAYS'],
-    ['EXPLOIT STREAK', fmt(n.streak), 'DAY STREAK'],
-    ['PAYLOAD', fmt(n.stars), 'STARS EARNED'],
-    ['CREW', fmt(n.followers), 'FOLLOWERS'],
-  ];
-  const rx0 = 470;
-  const colW = 228;
-  const readoutSvg = readouts
-    .map(([label, value, unit], i) => {
-      const x = rx0 + (i % 3) * colW;
-      const y = 94 + Math.floor(i / 3) * 112;
-      return `<g class="ro" style="animation-delay:${(0.5 + i * 0.12).toFixed(2)}s">
-  ${brackets(x, y, colW - 16, 96, 10, c.hud)}
-  <text x="${x + 16}" y="${y + 26}" font-family="${MONO}" font-size="11" letter-spacing="2" fill="${c.muted}">${label}</text>
-  <text x="${x + 14}" y="${y + 66}" font-family="${THIN}" font-weight="600" font-size="38" fill="${c.fg}">${value}</text>
-  <text x="${x + 16}" y="${y + 84}" font-family="${MONO}" font-size="10" letter-spacing="1.5" fill="${c.hud}">${unit}</text>
+  // Readouts: one hero number, then two rows of supporting numbers. No boxes, just type.
+  const col = [480, 760, 960];
+  const cell = (x, labelY, baseY, size, label, value, unit, delay) => `<g class="ro" style="animation-delay:${delay.toFixed(2)}s">
+  <text x="${x}" y="${labelY}" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="3" fill="${c.muted}">${label}</text>
+  <text x="${x - 2}" y="${baseY}" font-family="${THIN}" font-weight="700" font-size="${size}" fill="${c.fg}">${value}</text>
+  <text x="${x}" y="${baseY + 24}" font-family="${MONO}" font-size="11" font-weight="700" letter-spacing="2" fill="${c.hud}">${unit}</text>
 </g>`;
-    })
-    .join('');
+  const readoutSvg = [
+    cell(col[0], 98, 186, 84, 'OPERATIONS', fmt(n.total), 'CONTRIBUTIONS · LAST 12 MONTHS', 0.5),
+    cell(col[1], 98, 186, 56, 'SESSION AGE', fmt(n.years), 'YEARS ON GITHUB', 0.65),
+    cell(col[2], 98, 186, 56, 'UPTIME', fmt(n.active), 'ACTIVE DAYS', 0.8),
+    cell(col[0], 264, 312, 44, 'MAX STREAK', fmt(n.streak), 'CONSECUTIVE DAYS', 0.95),
+    cell(col[1], 264, 312, 44, 'REPUTATION', fmt(n.stars), 'STARS EARNED', 1.1),
+    cell(col[2], 264, 312, 44, 'NETWORK', fmt(n.followers), 'FOLLOWERS', 1.25),
+  ].join('');
 
-  // Spectral composition: language mix as one segmented band.
+  // Language arsenal: one segmented bar with names underneath, or a plain note when there is no code yet.
   let langs = (profile.languages || []).slice(0, 5);
-  const rest = 1 - langs.reduce((sum, l) => sum + l.share, 0);
-  if (rest > 0.01) langs = [...langs, { name: 'Other', share: rest }];
-  const sx = rx0;
-  const sw = colW * 3 - 16;
-  const shades = [1, 0.72, 0.52, 0.38, 0.26, 0.16];
+  if (langs.length) {
+    const rest = 1 - langs.reduce((sum, l) => sum + l.share, 0);
+    if (rest > 0.01) langs = [...langs, { name: 'Other', share: rest }];
+  }
+  const sx = col[0];
+  const sw = W - 40 - sx;
+  const shades = [1, 0.74, 0.54, 0.4, 0.28, 0.18];
   let cursor = sx;
-  const spectrum = langs
+  const segments = langs
     .map((l, i) => {
       const w = Math.max(3, l.share * sw - 2);
-      const seg = `<g class="seg" style="animation-delay:${(1.3 + i * 0.1).toFixed(2)}s"><rect x="${r1(cursor)}" y="352" width="${r1(w)}" height="14" fill="${c.hud}" fill-opacity="${shades[i] ?? 0.12}"/>${
-        w > 74
-          ? `<text x="${r1(cursor)}" y="390" font-family="${MONO}" font-size="10.5" letter-spacing="1" fill="${c.muted}">${escapeXml(l.name.toUpperCase())} ${Math.round(l.share * 100)}%</text>`
+      const seg = `<g class="seg" style="animation-delay:${(1.4 + i * 0.1).toFixed(2)}s"><rect x="${r1(cursor)}" y="380" width="${r1(w)}" height="10" fill="${c.hud}" fill-opacity="${shades[i] ?? 0.12}"/>${
+        w > 96
+          ? `<text x="${r1(cursor)}" y="412" font-family="${MONO}" font-size="11" font-weight="700" letter-spacing="1" fill="${c.muted}">${escapeXml(l.name.toUpperCase())} ${Math.round(l.share * 100)}%</text>`
           : ''
       }</g>`;
       cursor += w + 2;
       return seg;
     })
     .join('');
+  const spectrum = langs.length
+    ? segments
+    : `<text x="${sx}" y="396" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="2" fill="${c.muted}">NO PUBLIC CODE YET</text>`;
 
   const css = `
 .frame{animation:fade 1s ease-out both}
@@ -383,25 +381,26 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 ${REDUCED}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
-    `Mission telemetry: ${n.years} years on GitHub, ${fmt(n.total)} contributions in 12 months, ${n.active} active days, longest streak ${n.streak} days, ${fmt(n.stars)} stars, ${fmt(n.followers)} followers. Busiest month ${months[busiest]?.label || ''}.`
+    `Recon stats: ${n.years} years on GitHub, ${fmt(n.total)} contributions in 12 months, ${n.active} active days, longest streak ${n.streak} days, ${fmt(n.stars)} stars, ${fmt(n.followers)} followers. Busiest month ${months[busiest]?.label || ''}.`
   )}">
 <style>${css}</style>
 <defs>
-  <linearGradient id="scanTrail" x1="0" x2="1"><stop offset="0" stop-color="${c.hud}" stop-opacity="0"/><stop offset="1" stop-color="${c.hud}" stop-opacity="0.35"/></linearGradient>
+  <linearGradient id="scanTrail" x1="0" x2="1"><stop offset="0" stop-color="${c.hud}" stop-opacity="0"/><stop offset="1" stop-color="${c.hud}" stop-opacity="0.3"/></linearGradient>
 </defs>
 <g class="frame">
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/>
-  ${brackets(14, 14, W - 28, H - 28, 22, c.hud)}
-  <text x="40" y="52" font-family="${MONO}" font-size="12" letter-spacing="3" fill="${c.hud}">MISSION TELEMETRY</text>
-  <text x="${W - 40}" y="52" text-anchor="end" font-family="${MONO}" font-size="12" letter-spacing="2" fill="${c.muted}">${escapeXml(missionName.toUpperCase())}  ·  @${escapeXml(profile.login.toUpperCase())}</text>
-  <line x1="40" y1="66" x2="${W - 40}" y2="66" stroke="${c.faint}"/>
+  <text x="40" y="46" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="3" fill="${c.hud}">RECON  //  STATS</text>
+  <text x="${W - 40}" y="46" text-anchor="end" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="2" fill="${c.muted}">${escapeXml(missionName.toUpperCase())}  ·  @${escapeXml(profile.login.toUpperCase())}</text>
+  <line x1="40" y1="62" x2="${W - 40}" y2="62" stroke="${c.faint}"/>
+  <line x1="${col[0]}" y1="236" x2="${W - 40}" y2="236" stroke="${c.faint}"/>
   ${grid}${spokes}
-  <text x="${ox}" y="${H - 22}" text-anchor="middle" font-family="${MONO}" font-size="10" letter-spacing="2" fill="${c.muted}">ORBIT · CONTRIBUTIONS PER MONTH</text>
-  <text x="${rx0}" y="340" font-family="${MONO}" font-size="11" letter-spacing="2" fill="${c.muted}">SPECTRAL COMPOSITION</text>
+  <text x="${ox}" y="${H - 14}" text-anchor="middle" font-family="${MONO}" font-size="11" font-weight="700" letter-spacing="2" fill="${c.muted}">ACTIVITY  ·  CONTRIBUTIONS PER MONTH</text>
+  <text x="${sx}" y="368" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="3" fill="${c.muted}">LANGUAGE ARSENAL</text>
+  <rect x="${sx}" y="380" width="${sw}" height="10" fill="${c.faint}" opacity="0.6"/>
 </g>
-<path class="orbit-fill" d="${orbit.d}" fill="${c.hud}" fill-opacity="0.08"/>
-<path class="orbit" d="${orbit.d}" fill="none" stroke="${c.hud}" stroke-width="2" stroke-linejoin="round"/>
-${peak ? `<g class="peak"><circle class="ping" cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="5" fill="none" stroke="${c.hud}" stroke-width="1.5"/><circle cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="4" fill="${c.hud}"/></g>` : ''}
+<path class="orbit-fill" d="${orbit.d}" fill="${c.hud}" fill-opacity="0.14"/>
+<path class="orbit" d="${orbit.d}" fill="none" stroke="${c.hud}" stroke-width="2.5" stroke-linejoin="round"/>
+${peak ? `<g class="peak"><circle class="ping" cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="5" fill="none" stroke="${c.hud}" stroke-width="1.5"/><circle cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="4.5" fill="${c.hud}"/></g>` : ''}
 ${readoutSvg}
 ${spectrum}
 <g class="scan" opacity="0"><rect x="0" y="14" width="80" height="${H - 28}" fill="url(#scanTrail)"/><rect x="79" y="14" width="1.5" height="${H - 28}" fill="${c.hud}"/></g>
