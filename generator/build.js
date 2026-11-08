@@ -10,7 +10,7 @@ import { linksFromGitHub } from './src/lib/links.js';
 
 const root = path.resolve(process.argv[2] || '..');
 const login = process.env.GH_LOGIN || process.env.GITHUB_REPOSITORY_OWNER || 'MithrandirHEX';
-const config = JSON.parse(fs.readFileSync(path.join(root, 'profile.config.json'), 'utf8'));
+const config = JSON.parse(fs.readFileSync(path.join(root, 'profile.config.json'), 'utf8').replace(/^﻿/, ''));
 
 const QUERY = `
 query ($login: String!) {
@@ -32,6 +32,7 @@ query ($login: String!) {
       nodes { name stargazerCount isFork }
     }
     contributionsCollection {
+      totalCommitContributions totalPullRequestContributions
       contributionCalendar { totalContributions weeks { contributionDays { date contributionCount } } }
     }
   }
@@ -78,6 +79,9 @@ async function fetchLive() {
     links: linksFromGitHub(u.twitterUsername, u.socialAccounts.nodes),
     joinedYear: new Date(u.createdAt).getFullYear(),
     followers: u.followers.totalCount,
+    commits: u.contributionsCollection.totalCommitContributions,
+    pullRequests: u.contributionsCollection.totalPullRequestContributions,
+    publicRepos: u.allRepos.nodes.filter((r) => r.name.toLowerCase() !== u.login.toLowerCase()).length,
     totalStars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     repos: candidates,
     // Every public repository, forks included (profile repo excluded): one point each on the accretion disk.
@@ -103,6 +107,7 @@ function fetchSample() {
   return {
     login, name: login, headline: '', website: '', email: '', links: [], joinedYear: new Date().getFullYear() - 1,
     followers: 0, totalStars: 0, repos: [], featured: [],
+    commits: 120, pullRequests: 7, publicRepos: 4,
     repoPoints: ['recon-notes', 'exploit-lab', 'fuzz-harness', 'writeups'].map((name, i) => ({ name, stars: i * 3 })), languages: [{ name: 'Python', share: 1 }],
     contributions: { total: days.reduce((s, d) => s + d.count, 0), days },
   };
@@ -117,12 +122,13 @@ const profile = {
   name: pick(config.name, live.name),
   headline: pick(config.headline, live.headline),
   intro: config.intro || '',
+  arsenal: config.arsenal || {},
   now: config.now || '',
   website: pick(config.website, live.website),
   email: pick(config.email, live.email),
   links: pick(config.links, live.links),
   featured: pick(config.featured, live.featured),
-  templateData: { singularity: { missionName: config.missionName || '', signoff: config.signoff || '' } },
+  templateData: { singularity: { missionName: config.missionName || '', signoff: config.signoff || '', contact: config.secureContact || '' } },
 };
 
 const { markdown, assets } = render(profile);

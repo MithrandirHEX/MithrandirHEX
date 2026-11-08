@@ -194,7 +194,7 @@ export function heroSvg(profile, themeName, { missionName }) {
   const nameSize = Math.round(Math.max(26, Math.min(58, 1000 / (name.length * 1.05))));
   const tracking = nameSize * 0.42;
   const sub = String(profile.headline || '').slice(0, 96);
-  const bottomLine = `${fmt(n.total)} CONTRIBUTIONS  ·  ${fmt(n.active)} DAYS ACTIVE IN GRID  ·  MAX EXPLOIT STREAK ${n.streak} DAYS`;
+  const bottomLine = `${fmt(n.total)} CONTRIBUTIONS  ·  ${fmt(profile.publicRepos || 0)} REPOS  ·  ${fmt(n.active)} DAYS ACTIVE IN GRID  ·  MAX EXPLOIT STREAK ${n.streak} DAYS`;
 
   const css = `
 .scene{animation:fade 2.4s ease-out both}
@@ -311,7 +311,7 @@ function closedCurve(points, samples = 10) {
 export function telemetrySvg(profile, themeName, { missionName }) {
   const c = THEMES[themeName];
   const W = 1200;
-  const H = 440;
+  const H = 600;
   const n = missionNumbers(profile);
   const months = monthlySeries(profile.contributions?.days || []);
   const maxMonth = Math.max(1, ...months.map((m) => m.total));
@@ -319,8 +319,8 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 
   // Activity radar: one vertex per month, radius by that month's contributions.
   const ox = 230;
-  const oy = 252;
-  const R = 140;
+  const oy = 330;
+  const R = 150;
   const angleOf = (i) => ((-90 + (i * 360) / months.length) * Math.PI) / 180;
   const pts = months.map((m, i) => {
     const r = 30 + (R - 30) * Math.sqrt(m.total / maxMonth);
@@ -348,38 +348,47 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 </g>`;
   const readoutSvg = [
     cell(col[0], 98, 186, 84, 'OPERATIONS', fmt(n.total), 'CONTRIBUTIONS · LAST 12 MONTHS', 0.5),
-    cell(col[1], 98, 186, 56, 'SESSION AGE', fmt(n.years), 'YEARS ON GITHUB', 0.65),
-    cell(col[2], 98, 186, 56, 'UPTIME', fmt(n.active), 'ACTIVE DAYS', 0.8),
-    cell(col[0], 264, 312, 44, 'MAX STREAK', fmt(n.streak), 'CONSECUTIVE DAYS', 0.95),
-    cell(col[1], 264, 312, 44, 'REPUTATION', fmt(n.stars), 'STARS EARNED', 1.1),
-    cell(col[2], 264, 312, 44, 'NETWORK', fmt(n.followers), 'FOLLOWERS', 1.25),
+    cell(col[1], 98, 186, 56, 'COMMITS', fmt(profile.commits || 0), 'COMMIT CONTRIBUTIONS', 0.65),
+    cell(col[2], 98, 186, 56, 'PULL REQUESTS', fmt(profile.pullRequests || 0), 'OPENED · LAST 12 MO', 0.8),
+    cell(col[0], 258, 306, 44, 'UPTIME', fmt(n.active), 'ACTIVE DAYS', 0.95),
+    cell(col[1], 258, 306, 44, 'MAX STREAK', fmt(n.streak), 'CONSECUTIVE DAYS', 1.1),
+    cell(col[2], 258, 306, 44, 'PUBLIC REPOS', fmt(profile.publicRepos || 0), 'FORKS INCLUDED', 1.25),
   ].join('');
+  const meta = `${fmt(n.stars)} STARS  ·  ${fmt(n.followers)} FOLLOWERS  ·  ${n.years} YR ON GITHUB`;
 
-  // Language arsenal: one segmented bar with names underneath, or a plain note when there is no code yet.
-  let langs = (profile.languages || []).slice(0, 5);
-  if (langs.length) {
-    const rest = 1 - langs.reduce((sum, l) => sum + l.share, 0);
-    if (rest > 0.01) langs = [...langs, { name: 'Other', share: rest }];
-  }
-  const sx = col[0];
-  const sw = W - 40 - sx;
-  const shades = [1, 0.74, 0.54, 0.4, 0.28, 0.18];
-  let cursor = sx;
-  const segments = langs
-    .map((l, i) => {
-      const w = Math.max(3, l.share * sw - 2);
-      const seg = `<g class="seg" style="animation-delay:${(1.4 + i * 0.1).toFixed(2)}s"><rect x="${r1(cursor)}" y="380" width="${r1(w)}" height="10" fill="${c.hud}" fill-opacity="${shades[i] ?? 0.12}"/>${
-        w > 96
-          ? `<text x="${r1(cursor)}" y="412" font-family="${MONO}" font-size="11" font-weight="700" letter-spacing="1" fill="${c.muted}">${escapeXml(l.name.toUpperCase())} ${Math.round(l.share * 100)}%</text>`
-          : ''
-      }</g>`;
-      cursor += w + 2;
-      return seg;
+  // Arsenal: three rows of chips. Languages and tools come from profile.config.json; languages that GitHub
+  // detects in the public repositories are appended automatically with their share. Entries starting with
+  // "(" are placeholders and are drawn dashed and dim until they are replaced.
+  const arsenal = profile.arsenal || {};
+  const configured = arsenal.languages || [];
+  const detected = (profile.languages || [])
+    .filter((l) => l.share >= 0.03 && !configured.some((x) => String(x).toLowerCase() === l.name.toLowerCase()))
+    .slice(0, 6)
+    .map((l) => `${l.name} ${Math.round(l.share * 100)}%`);
+  const arsenalRows = [
+    ['LANGUAGES', [...configured, ...detected]],
+    ['TOOLS', arsenal.tools || []],
+    ['ENVIRONMENTS', arsenal.environments || []],
+  ];
+  const chipWidth = (text) => Math.round(text.length * 7.4 + 22);
+  const maxX = W - 40;
+  const arsenalSvg = arsenalRows
+    .map(([label, items], k) => {
+      if (!items.length) return '';
+      const ly = 410 + k * 62;
+      let x = col[0];
+      let chips = '';
+      items.forEach((item, i) => {
+        const text = String(item).toUpperCase();
+        const w = chipWidth(text);
+        if (x + w > maxX) return;
+        const ph = text.startsWith('(');
+        chips += `<g class="ro" style="animation-delay:${(1.4 + k * 0.15 + i * 0.05).toFixed(2)}s"><rect x="${x}" y="${ly + 10}" width="${w}" height="26" rx="5" fill="${c.hud}" fill-opacity="${ph ? 0 : 0.08}" stroke="${c.hud}" stroke-opacity="${ph ? 0.35 : 0.6}"${ph ? ' stroke-dasharray="3 3"' : ''}/><text x="${x + w / 2}" y="${ly + 28}" text-anchor="middle" font-family="${MONO}" font-size="12" font-weight="700" fill="${ph ? c.muted : c.fg}">${escapeXml(text)}</text></g>`;
+        x += w + 8;
+      });
+      return `<text x="${col[0]}" y="${ly}" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="3" fill="${c.muted}">${label}</text>${chips}`;
     })
     .join('');
-  const spectrum = langs.length
-    ? segments
-    : `<text x="${sx}" y="396" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="2" fill="${c.muted}">NO PUBLIC CODE YET</text>`;
 
   const css = `
 .frame{animation:fade 1s ease-out both}
@@ -388,18 +397,16 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 .peak{animation:fade .6s ease-out 2.6s both}
 .ping{transform-box:fill-box;transform-origin:center;animation:ping 2.6s ease-out 3s infinite}
 .ro{animation:rise .9s ${EXPO} both}
-.seg{transform-box:fill-box;transform-origin:left center;animation:grow 1s ${EXPO} both}
 .scan{animation:scan 2.2s cubic-bezier(.4,0,.2,1) .2s both}
 @keyframes fade{from{opacity:0}}
 @keyframes draw{from{stroke-dashoffset:${orbit.length}}}
 @keyframes ping{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(3.2)}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
-@keyframes grow{from{transform:scaleX(0)}}
 @keyframes scan{0%{opacity:.9;transform:translateX(0)}85%{opacity:.5}100%{opacity:0;transform:translateX(${W - 40}px)}}
 ${REDUCED}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
-    `Recon stats: ${n.years} years on GitHub, ${fmt(n.total)} contributions in 12 months, ${n.active} active days, longest streak ${n.streak} days, ${fmt(n.stars)} stars, ${fmt(n.followers)} followers. Busiest month ${months[busiest]?.label || ''}.`
+    `Recon stats: ${fmt(n.total)} contributions in 12 months, ${fmt(profile.commits || 0)} commits, ${fmt(profile.pullRequests || 0)} pull requests, ${n.active} active days, longest streak ${n.streak} days, ${fmt(profile.publicRepos || 0)} public repositories, ${fmt(n.stars)} stars, ${fmt(n.followers)} followers. Busiest month ${months[busiest]?.label || ''}.`
   )}">
 <style>${css}</style>
 <defs>
@@ -410,17 +417,17 @@ ${REDUCED}`;
   <text x="40" y="46" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="3" fill="${c.hud}">RECON  //  STATS</text>
   <text x="${W - 40}" y="46" text-anchor="end" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="2" fill="${c.muted}">${escapeXml(missionName.toUpperCase())}  ·  @${escapeXml(profile.login.toUpperCase())}</text>
   <line x1="40" y1="62" x2="${W - 40}" y2="62" stroke="${c.faint}"/>
-  <line x1="${col[0]}" y1="236" x2="${W - 40}" y2="236" stroke="${c.faint}"/>
+  <line x1="${col[0]}" y1="232" x2="${W - 40}" y2="232" stroke="${c.faint}"/>
+  <line x1="${col[0]}" y1="384" x2="${W - 40}" y2="384" stroke="${c.faint}"/>
   ${grid}${spokes}
   <text x="${ox}" y="${H - 14}" text-anchor="middle" font-family="${MONO}" font-size="11" font-weight="700" letter-spacing="2" fill="${c.muted}">ACTIVITY  ·  CONTRIBUTIONS PER MONTH</text>
-  <text x="${sx}" y="368" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="3" fill="${c.muted}">LANGUAGE ARSENAL</text>
-  <rect x="${sx}" y="380" width="${sw}" height="10" fill="${c.faint}" opacity="0.6"/>
+  <text x="${col[0]}" y="366" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="2" fill="${c.muted}">${meta}</text>
 </g>
 <path class="orbit-fill" d="${orbit.d}" fill="${c.hud}" fill-opacity="0.14"/>
 <path class="orbit" d="${orbit.d}" fill="none" stroke="${c.hud}" stroke-width="2.5" stroke-linejoin="round"/>
 ${peak ? `<g class="peak"><circle class="ping" cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="5" fill="none" stroke="${c.hud}" stroke-width="1.5"/><circle cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="4.5" fill="${c.hud}"/></g>` : ''}
 ${readoutSvg}
-${spectrum}
+${arsenalSvg}
 <g class="scan" opacity="0"><rect x="0" y="14" width="80" height="${H - 28}" fill="url(#scanTrail)"/><rect x="79" y="14" width="1.5" height="${H - 28}" fill="${c.hud}"/></g>
 </svg>`;
 }
@@ -429,7 +436,7 @@ ${spectrum}
 // 3. End of transmission — planet limb at sunrise
 // ---------------------------------------------------------------------------
 
-export function transmissionEndSvg(profile, themeName, { signoff }) {
+export function transmissionEndSvg(profile, themeName, { signoff, contact }) {
   const c = THEMES[themeName];
   const W = 1200;
   const H = 170;
@@ -456,6 +463,7 @@ ${REDUCED}`;
   <g class="end" text-anchor="middle">
     <text x="${600 + 6}" y="62" font-family="${THIN}" font-weight="600" font-size="22" letter-spacing="12" fill="${c.fg}">END OF TRANSMISSION</text>
     <text x="600" y="90" font-family="${MONO}" font-size="11" letter-spacing="2.5" fill="${c.muted}">@${escapeXml(profile.login.toUpperCase())}  ·  ${escapeXml(signoff.toUpperCase())}</text>
+    ${contact ? `<text x="600" y="116" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="2.5" fill="${c.hud}">SECURE CONTACT  ·  ${escapeXml(contact.toUpperCase())}</text>` : ''}
   </g>
 </g>
 <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="none" stroke="${c.faint}"/>

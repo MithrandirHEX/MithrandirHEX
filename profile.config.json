@@ -1,12 +1,25 @@
 {
+  "_help": "Replace every (...............) with your own text. Empty strings and empty lists are simply hidden. 'links' format: [{ \"id\": \"linkedin\", \"value\": \"your-handle\" }, { \"id\": \"x\", \"value\": \"your-handle\" }, { \"id\": \"youtube\", \"value\": \"yourchannel\" }, { \"id\": \"github\", \"value\": \"...\" }]. 'featured' is a list of repository names to list under Flight log (leave empty to use your pinned repos).",
+
   "name": "MithrandirHEX",
   "headline": "Security Researcher",
-  "intro": "I break things to make them safer. TODO: describe your work here.",
-  "now": "TODO: what you are researching right now.",
+
+  "intro": "(............... 2-3 sentences: who you are, what you research, what you build ...............)",
+  "now": "(............... what you are researching or building right now ...............)",
+
   "missionName": "Operation Zero",
   "signoff": "Stay curious, stay ethical",
+  "secureContact": "(............... e.g. a security email or PGP fingerprint ...............)",
+
   "email": "",
   "website": "",
   "links": [],
+
+  "arsenal": {
+    "languages": ["(.......)"],
+    "tools": ["(.......)"],
+    "environments": ["(.......)"]
+  },
+
   "featured": []
 }
