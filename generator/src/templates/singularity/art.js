@@ -169,35 +169,40 @@ export function heroSvg(profile, themeName, { missionName }) {
     <use xlink:href="#rings"/>
     <g class="spin s0"><use xlink:href="#b0"/></g>
     <g class="spin s1"><use xlink:href="#b1"/></g>
-    <g class="spin s2"><use xlink:href="#b2"/></g>
-    <g class="spin s3">${repoDots}</g>
-  </g>
+    <g class="spin s2"><use xlink:href="#b2"/></g>  </g>
 </g>`;
 
-  // Repository markers: one bright comet per public repository. It is drawn in the disk's own plane, so
-  // it bends along the orbit exactly like the daily particles do: a glowing head with a short tail trailing
-  // behind it (the disk spins towards increasing angle, so the head is the end of the arc). Its place on
-  // the disk is derived from the repo name and stays the same between runs; more stars gives a longer,
-  // thicker comet.
-  const repoDots = (profile.repoPoints || [])
+  // Repository markers: one comet per public repository. A comet is drawn in screen space (so its head stays
+  // a round, glowing ball instead of being flattened like the disk) and travels along the same tilted
+  // ellipse as a disk particle at that radius, taking 90 s per lap in the same direction the disk spins.
+  // `rotate="auto"` turns it to follow the path, so the tail always trails behind it along the orbit.
+  // Its radius and starting phase come from the repo name and stay the same between runs; more stars
+  // gives a bigger head and a longer tail. The same group is drawn once in the back clip and once in
+  // the front clip, so the black hole hides it while it passes behind.
+  const tilt = (TILT * Math.PI) / 180;
+  const comets = (profile.repoPoints || [])
     .slice(0, 80)
     .map((repo) => {
       const rr = seededRandom(`repo:${repo.name}`);
       const dist = Rin + (Rout - Rin) * (0.1 + 0.8 * rr());
-      const a0 = rr() * TAU;
+      const phase = r1(rr() * 90);
       const root = Math.sqrt(repo.stars || 0);
-      const size = r1(4 + Math.min(4, root * 1.1));
-      const len = 0.34 + Math.min(0.18, root * 0.04);
-      const at = (a) => [r1(Math.cos(a) * dist), r1(Math.sin(a) * dist)];
-      const [x1, y1] = at(a0);
-      const [xm, ym] = at(a0 + len * 0.35);
-      const [x2, y2] = at(a0 + len);
-      const rad = r1(dist);
+      const size = r1(5.5 + Math.min(4, root * 1.1));
+      const tail = r1(110 + Math.min(70, root * 18));
+      const th = r1(size * 0.95);
+      const ry = r1(dist * SQUASH);
+      const rx = r1(dist);
+      const sx = r1(cx + Math.cos(tilt) * dist);
+      const sy = r1(cy + Math.sin(tilt) * dist);
+      const ex = r1(cx - Math.cos(tilt) * dist);
+      const ey = r1(cy - Math.sin(tilt) * dist);
+      const path = `M${sx} ${sy}A${rx} ${ry} ${TILT} 0 1 ${ex} ${ey}A${rx} ${ry} ${TILT} 0 1 ${sx} ${sy}`;
       return `<g>
-  <path d="M${x1} ${y1}A${rad} ${rad} 0 0 1 ${x2} ${y2}" fill="none" stroke="${c.diskMid}" stroke-width="${r1(size * 3)}" stroke-opacity="0.28" stroke-linecap="round"/>
-  <path d="M${xm} ${ym}A${rad} ${rad} 0 0 1 ${x2} ${y2}" fill="none" stroke="${c.diskHi}" stroke-width="${r1(size * 1.3)}" stroke-opacity="0.95" stroke-linecap="round"/>
-  <circle cx="${x2}" cy="${y2}" r="${r1(size * 3.4)}" fill="${c.diskMid}" fill-opacity="0.3"/>
-  <circle cx="${x2}" cy="${y2}" r="${r1(size * 1.4)}" fill="${c.diskHi}"/>
+  <animateMotion dur="90s" begin="-${phase}s" repeatCount="indefinite" rotate="auto" path="${path}"/>
+  <path d="M0 ${-th}Q${r1(-tail * 0.5)} ${r1(-th * 0.45)} ${-tail} 0Q${r1(-tail * 0.5)} ${r1(th * 0.45)} 0 ${th}Z" fill="url(#cometTail)"/>
+  <circle r="${r1(size * 3.4)}" fill="${c.diskMid}" fill-opacity="0.3" filter="url(#glow)"/>
+  <circle r="${r1(size * 1.7)}" fill="${c.diskHi}" fill-opacity="0.55"/>
+  <circle r="${size}" fill="${c.diskHi}"/>
 </g>`;
     })
     .join('');
@@ -237,6 +242,9 @@ ${REDUCED}`;
   <radialGradient id="haze" cx="${cx}" cy="${cy}" r="540" gradientUnits="userSpaceOnUse">
     <stop offset="0" stop-color="${c.haze}" stop-opacity="${c.hazeOpacity}"/><stop offset="1" stop-color="${c.haze}" stop-opacity="0"/>
   </radialGradient>
+  <linearGradient id="cometTail" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="${c.diskHi}" stop-opacity="0"/><stop offset="0.55" stop-color="${c.diskMid}" stop-opacity="0.55"/><stop offset="1" stop-color="${c.diskHi}" stop-opacity="0.98"/>
+  </linearGradient>
   <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
   <filter id="diskGlow" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="14 3"/></filter>
   <g id="rings">${rings}</g>
@@ -261,9 +269,11 @@ ${REDUCED}`;
       <ellipse cx="${cx}" cy="${cy}" rx="${Rs * 1.24}" ry="${Rs * 1.15}" fill="none" stroke="${c.halo}" stroke-width="3" stroke-opacity="0.75"/>
     </g>
     ${disk('back')}
+    <g clip-path="url(#back)">${comets}</g>
     <circle cx="${cx}" cy="${cy}" r="${Rs}" fill="${c.shadow}"/>
     <circle cx="${cx}" cy="${cy}" r="${Rs * 1.05}" fill="none" stroke="${c.diskHi}" stroke-width="2" stroke-opacity="0.9" mask="url(#doppler)"/>
     ${disk('front')}
+    <g clip-path="url(#front)">${comets}</g>
     <text class="title" x="${cx + tracking / 2}" y="568" text-anchor="middle" font-family="${THIN}" font-weight="600" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
     ${sub ? `<text class="sub" x="${cx + 2}" y="612" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="20" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
   </g>
