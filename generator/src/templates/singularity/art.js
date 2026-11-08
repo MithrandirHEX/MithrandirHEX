@@ -177,7 +177,7 @@ export function heroSvg(profile, themeName, { missionName }) {
   const nameSize = Math.round(Math.max(26, Math.min(46, 1000 / (name.length * 1.05))));
   const tracking = nameSize * 0.42;
   const sub = String(profile.headline || '').slice(0, 96);
-  const bottomLine = `${fmt(n.total)} CONTRIBUTIONS  ·  ${fmt(n.active)} DAYS IN ORBIT  ·  LONGEST BURN ${n.streak} DAYS`;
+  const bottomLine = `${fmt(n.total)} CONTRIBUTIONS  ·  ${fmt(n.active)} DAYS ACTIVE IN GRID  ·  MAX EXPLOIT STREAK ${n.streak} DAYS`;
 
   const css = `
 .scene{animation:fade 2.4s ease-out both}
@@ -244,7 +244,7 @@ ${REDUCED}`;
   <g class="bar-top">
     <rect width="${W}" height="${BAR}" fill="${c.bar}"/>
     <g class="hud" font-family="${MONO}" font-size="12" letter-spacing="3" fill="${c.barText}">
-      <text x="36" y="34">MISSION LOG  //  ${escapeXml(missionName.toUpperCase())}</text>
+      <text x="36" y="34">CLASSIFIED  //  EYES ONLY  //  ${escapeXml(missionName.toUpperCase())}</text>
       <text x="${W - 36}" y="34" text-anchor="end">T+ ${n.years} YR  ·  @${escapeXml(profile.login.toUpperCase())}</text>
     </g>
   </g>
@@ -324,8 +324,8 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   const readouts = [
     ['MISSION ELAPSED', fmt(n.years), 'YEARS ON GITHUB'],
     ['DISTANCE', fmt(n.total), 'CONTRIBUTIONS · 12 MO'],
-    ['TIME IN ORBIT', fmt(n.active), 'ACTIVE DAYS'],
-    ['LONGEST BURN', fmt(n.streak), 'DAY STREAK'],
+    ['DAYS IN GRID', fmt(n.active), 'ACTIVE DAYS'],
+    ['EXPLOIT STREAK', fmt(n.streak), 'DAY STREAK'],
     ['PAYLOAD', fmt(n.stars), 'STARS EARNED'],
     ['CREW', fmt(n.followers), 'FOLLOWERS'],
   ];
