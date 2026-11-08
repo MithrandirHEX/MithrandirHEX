@@ -81,13 +81,11 @@ async function fetchLive() {
     followers: u.followers.totalCount,
     commits: u.contributionsCollection.totalCommitContributions,
     pullRequests: u.contributionsCollection.totalPullRequestContributions,
-    publicRepos: u.allRepos.nodes.filter((r) => r.name.toLowerCase() !== u.login.toLowerCase()).length,
+    publicRepos: u.allRepos.nodes.length,
     totalStars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     repos: candidates,
-    // Every public repository, forks included (profile repo excluded): one point each on the accretion disk.
-    repoPoints: u.allRepos.nodes
-      .filter((r) => r.name.toLowerCase() !== u.login.toLowerCase())
-      .map((r) => ({ name: r.name, stars: r.stargazerCount })),
+    // Every public repository, forks and the profile repo included: one point each on the accretion disk.
+    repoPoints: u.allRepos.nodes.map((r) => ({ name: r.name, stars: r.stargazerCount })),
     featured: candidates.slice(0, 4).map((r) => r.name),
     languages,
     contributions: { total: u.contributionsCollection.contributionCalendar.totalContributions, days },

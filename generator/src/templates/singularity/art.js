@@ -185,8 +185,8 @@ export function heroSvg(profile, themeName, { missionName }) {
       const ang = rr() * TAU;
       const px = r1(Math.cos(ang) * dist);
       const py = r1(Math.sin(ang) * dist);
-      const size = r1(3.2 + Math.min(4, Math.sqrt(repo.stars || 0) * 1.1));
-      return `<g transform="translate(${px} ${py}) scale(1 ${r1(1 / SQUASH)})"><circle r="${r1(size * 2.6)}" fill="${c.diskMid}" fill-opacity="0.22"/><circle r="${size}" fill="${c.diskHi}"/></g>`;
+      const size = r1(6 + Math.min(5, Math.sqrt(repo.stars || 0) * 1.2));
+      return `<g transform="translate(${px} ${py}) scale(1 ${r1(1 / SQUASH)})"><circle r="${r1(size * 3.2)}" fill="${c.diskMid}" fill-opacity="0.16"/><circle r="${r1(size * 1.9)}" fill="${c.diskMid}" fill-opacity="0.35"/><circle r="${size}" fill="${c.diskHi}"/></g>`;
     })
     .join('');
 
