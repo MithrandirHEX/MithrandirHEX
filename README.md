@@ -1,4 +1,4 @@
-<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 15 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
+<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 16 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
 
 <p align="center"><b>MithrandirHEX</b> · Security Researcher</p>
 
@@ -9,13 +9,13 @@
 
 #### Telemetry
 
-<p align="center"><img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 15 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
+<p align="center"><img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 16 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
 
 <details>
 <summary><sub>Reading the instruments</sub></summary>
 
 - **Accretion disk:** one particle per day of the last year; brighter and closer to the hole means a busier day. Inner rings orbit faster, as they would around a real black hole.
-- **Bright points:** one per public repository; a bigger point means more stars.
+- **Bright points:** one per public repository, forks included; a bigger point means more stars.
 - **Orbit:** contributions per month, plotted as a closed trajectory; the beacon marks the busiest month.
 - **Spectral composition:** language share by bytes across public repositories.
 - **Light theme:** rendered as a photographic negative, the way astronomical survey plates were printed.
