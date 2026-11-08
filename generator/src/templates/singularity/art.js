@@ -203,7 +203,7 @@ export function heroSvg(profile, themeName, { missionName }) {
 .hud{animation:fade 1.2s ease-out 2s both}
 .spin{animation-name:spin;animation-timing-function:linear;animation-iteration-count:infinite}
 .s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}.s3{animation-duration:90s}.tw{animation:twinkle 4.5s ease-in-out infinite}
-.n1{animation:drift1 52s ease-in-out infinite alternate}.n2{animation:drift2 67s ease-in-out infinite alternate}.n3{animation:drift3 44s ease-in-out infinite alternate}
+.n1{animation:drift1 22s ease-in-out infinite alternate}.n2{animation:drift2 28s ease-in-out infinite alternate}.n3{animation:drift3 18s ease-in-out infinite alternate}
 .shoot{opacity:0;animation-timing-function:linear;animation-iteration-count:infinite}
 .sa{animation-name:shootA}.sb{animation-name:shootB}.sc{animation-name:shootC}
 .cursor{animation:blink 1.1s steps(1,end) infinite}
@@ -212,9 +212,9 @@ export function heroSvg(profile, themeName, { missionName }) {
 @keyframes barBot{from{transform:translateY(${BAR}px)}}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.15}}
-@keyframes drift1{to{transform:translate(90px,34px)}}
-@keyframes drift2{to{transform:translate(-80px,-30px)}}
-@keyframes drift3{to{transform:translate(50px,26px)}}
+@keyframes drift1{to{transform:translate(170px,60px)}}
+@keyframes drift2{to{transform:translate(-150px,-55px)}}
+@keyframes drift3{to{transform:translate(110px,48px)}}
 @keyframes shootA{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(520px,226px)}7%,100%{opacity:0;transform:translate(560px,243px)}}
 @keyframes shootB{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}5%{opacity:1;transform:translate(420px,182px)}6%,100%{opacity:0;transform:translate(450px,195px)}}
 @keyframes shootC{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(470px,204px)}7%,100%{opacity:0;transform:translate(505px,219px)}}
@@ -236,9 +236,9 @@ ${REDUCED}`;
   </radialGradient>
   <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
   <filter id="diskGlow" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="14 3"/></filter>
-  <radialGradient id="neb1"><stop offset="0" stop-color="${c.haze}" stop-opacity="0.22"/><stop offset="1" stop-color="${c.haze}" stop-opacity="0"/></radialGradient>
-  <radialGradient id="neb2"><stop offset="0" stop-color="#7a3f6b" stop-opacity="0.28"/><stop offset="1" stop-color="#7a3f6b" stop-opacity="0"/></radialGradient>
-  <radialGradient id="neb3"><stop offset="0" stop-color="${c.diskLo}" stop-opacity="0.3"/><stop offset="1" stop-color="${c.diskLo}" stop-opacity="0"/></radialGradient>
+  <radialGradient id="neb1"><stop offset="0" stop-color="${c.haze}" stop-opacity="0.32"/><stop offset="1" stop-color="${c.haze}" stop-opacity="0"/></radialGradient>
+  <radialGradient id="neb2"><stop offset="0" stop-color="#7a3f6b" stop-opacity="0.4"/><stop offset="1" stop-color="#7a3f6b" stop-opacity="0"/></radialGradient>
+  <radialGradient id="neb3"><stop offset="0" stop-color="${c.diskLo}" stop-opacity="0.42"/><stop offset="1" stop-color="${c.diskLo}" stop-opacity="0"/></radialGradient>
   <linearGradient id="shootTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-120" y2="-52">
     <stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/>
   </linearGradient>
@@ -261,9 +261,9 @@ ${REDUCED}`;
     <!-- Shooting stars: each streaks across for about a second and then stays dark for a long while. The three
          have different cycle lengths (23 s, 31 s, 41 s) so they never fall into a rhythm. -->
     <g aria-hidden="true">
-      <g transform="translate(110 118)"><g class="shoot sa" style="animation-duration:23s;animation-delay:5s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.8" fill="${c.fg}"/></g></g>
-      <g transform="translate(720 96)"><g class="shoot sb" style="animation-duration:31s;animation-delay:13s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.8" fill="${c.fg}"/></g></g>
-      <g transform="translate(1090 150) scale(-1 1)"><g class="shoot sc" style="animation-duration:41s;animation-delay:24s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.8" fill="${c.fg}"/></g></g>
+      ${[[110, 118, 0, 'a', 11, 2], [720, 96, 0, 'b', 14, 6], [1090, 150, 1, 'c', 17, 9], [380, 60, 0, 'c', 9, 4], [900, 230, 1, 'a', 13, 1], [40, 300, 0, 'b', 19, 8], [1150, 320, 1, 'b', 12, 5], [560, 180, 0, 'a', 16, 12]]
+        .map(([x, y, m, k, dur, delay]) => `<g transform="translate(${x} ${y})${m ? ' scale(-1 1)' : ''}"><g class="shoot s${k}" style="animation-duration:${dur}s;animation-delay:${delay}s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.6" stroke-linecap="round"/><circle r="3" fill="${c.fg}"/></g></g>`)
+        .join('\n      ')}
     </g>
     <g mask="url(#doppler)">
       <!-- Gravitational lensing: the far side of the disk is bent into a thick band over the top
@@ -338,7 +338,7 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   const all = profile.allTime?.days?.length ? profile.allTime.days : days;
   const allTotal = profile.allTime ? profile.allTime.total : n.total;
   // Each animated effect can be switched off in profile.config.json ("effects": { "snake": false, ... }).
-  const fx = { snake: true, constellation: true, replay: true, ripples: true, satellite: true, flame: true, comet: true, ...(profile.effects || {}) };
+  const fx = { snake: false, constellation: true, replay: true, ripples: true, satellite: true, flame: true, comet: true, ...(profile.effects || {}) };
 
   const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   const dateText = (iso, year = false) => {
@@ -386,14 +386,17 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   // zero, down to 4 s from twelve days).
   const satDur = Math.max(4, 16 - Math.min(cur.len, 12));
   const satellite = fx.satellite
-    ? `<g><animateTransform attributeName="transform" type="rotate" from="0 600 154" to="360 600 154" dur="${satDur}s" repeatCount="indefinite"/><circle cx="656" cy="154" r="11" fill="${c.diskMid}" fill-opacity="0.3"/><circle cx="656" cy="154" r="5" fill="${c.diskHi}"/></g>`
+    ? `<g><animateTransform attributeName="transform" type="rotate" from="0 600 154" to="360 600 154" dur="${satDur}s" repeatCount="indefinite"/><circle cx="656" cy="154" r="17" fill="${c.diskMid}" fill-opacity="0.3"/><circle cx="656" cy="154" r="8" fill="${c.diskHi}"/></g>`
     : '';
   const flame = 'M12 2c.8 3.2-1.2 4.6-2.6 6.6C8 10.6 7 12.1 7 14a5 5 0 0 0 10 0c0-2-1.1-3.4-2.1-4.6-.1 1.6-.9 2.6-1.9 2.9C13.700 9.200 13.100 5.200 12 2z';
   const streakCard = `${big(226, fmt(allTotal), 'TOTAL CONTRIBUTIONS', since, 0.4)}
 <g class="ro" style="animation-delay:0.5s">
   <circle class="ring" cx="600" cy="154" r="56" fill="none" stroke="${c.hud}" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="600" cy="98" r="18" fill="${c.bg}"/>
-  <g${fx.flame ? ' class="flame"' : ''}><path transform="translate(586 83) scale(1.16)" d="${flame}" fill="${c.hud}"/></g>
+  <circle cx="600" cy="98" r="28" fill="${c.bg}"/>
+  <g${fx.flame ? ' class="flame"' : ''}>
+    <path transform="translate(571 62) scale(2.4)" d="${flame}" fill="url(#flameGrad)"/>
+    <path class="flame2" transform="translate(588 84) scale(1.0)" d="${flame}" fill="url(#flameCore)" style="transform-box:fill-box;transform-origin:center bottom"/>
+  </g>
   <text x="600" y="176" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="60" fill="${c.fg}">${fmt(cur.len)}</text>
   <text x="600" y="244" text-anchor="middle" font-family="${MONO}" font-size="17" font-weight="700" letter-spacing="2" fill="${c.hud}">CURRENT STREAK</text>
   <text x="600" y="270" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.muted}">${range(cur)}</text>
@@ -470,15 +473,15 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   if (fx.ripples && grid.some((g) => g.count > 0)) {
     const peakDay = grid.reduce((b, g) => (g.count >= b.count ? g : b), grid[0]);
     const [rx, ry] = center(peakDay);
-    ripples = [0, 1.7, 3.4]
-      .map((d) => `<circle class="rip" cx="${r1(rx)}" cy="${r1(ry)}" r="${r1(cell * 0.6)}" fill="none" stroke="${c.diskHi}" stroke-width="1.6" style="animation-delay:${d}s"/>`)
+    ripples = [0, 2.3, 4.6]
+      .map((d) => `<circle class="rip" cx="${r1(rx)}" cy="${r1(ry)}" r="${r1(cell * 0.6)}" fill="none" stroke="${c.diskHi}" stroke-width="1" style="animation-delay:${d}s"/>`)
       .join('');
   }
 
   // Replay: a scanning beam sweeps the grid left to right, and each active day flashes as the beam passes it,
   // as if the year were being read back. One sweep takes 5.5 s out of a 17 s cycle.
-  const SWEEP = 5.5;
-  const PERIOD = 17;
+  const SWEEP = 3.6;
+  const PERIOD = 7;
   let flashes = '';
   let beam = '';
   if (fx.replay) {
@@ -486,7 +489,7 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
       .filter((g) => g.count > 0)
       .map((g) => `<rect class="fl" x="${gx + g.col * pitch}" y="${gy + g.wd * pitch}" width="${cell}" height="${cell}" rx="3" fill="${c.fg}" style="animation-delay:${((g.col / cols) * SWEEP).toFixed(2)}s"/>`)
       .join('');
-    beam = `<g class="beam"><rect x="${gx - 64}" y="${gy - 6}" width="64" height="${7 * pitch + 8}" fill="url(#beamTrail)"/><rect x="${gx - 2}" y="${gy - 6}" width="2.5" height="${7 * pitch + 8}" fill="${c.hud}"/></g>`;
+    beam = `<g class="beam"><rect x="${gx - 90}" y="${gy - 6}" width="90" height="${7 * pitch + 8}" fill="url(#beamTrail)"/><rect x="${gx - 3}" y="${gy - 6}" width="3.5" height="${7 * pitch + 8}" fill="${c.diskHi}"/></g>`;
   }
 
   // A rare comet crosses the grid diagonally (about two seconds in every 37).
@@ -621,8 +624,15 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 .col{animation:fade .6s ease-out both}
 .lit{animation:twinkle 3.6s ease-in-out infinite}
 .flame{transform-box:fill-box;transform-origin:center bottom;animation:flicker 1.7s ease-in-out infinite}
-.rip{opacity:0;transform-box:fill-box;transform-origin:center;animation:ripple 5.1s ease-out infinite}
-.fl{opacity:0;animation:flash ${PERIOD}s linear infinite}
+.rip{opacity:0;transform-box:fill-box;transform-origin:center;animation:ripple 7s ease-out infinite}
+.flame2{animation:flicker2 .9s ease-in-out infinite}
+.fl{opacity:0;transform-box:fill-box;transform-origin:center;animation:flash ${PERIOD}s linear infinite}
+.shoot{opacity:0;animation-timing-function:linear;animation-iteration-count:infinite}
+.sa{animation-name:shootA}.sb{animation-name:shootB}.sc{animation-name:shootC}
+@keyframes shootA{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(520px,226px)}7%,100%{opacity:0;transform:translate(560px,243px)}}
+@keyframes shootB{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}5%{opacity:1;transform:translate(420px,182px)}6%,100%{opacity:0;transform:translate(450px,195px)}}
+@keyframes shootC{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(470px,204px)}7%,100%{opacity:0;transform:translate(505px,219px)}}
+@keyframes flicker2{0%,100%{transform:scale(1,1)}33%{transform:scale(.85,1.18)}66%{transform:scale(1.12,.9)}}
 .beam{opacity:0;animation:sweep ${PERIOD}s linear infinite}
 .comet{opacity:0;animation:cometPass 37s linear 9s infinite}
 .ring{stroke-dasharray:352;animation:ring 1.4s ease-out .4s both}
@@ -633,8 +643,8 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 @keyframes ring{from{stroke-dashoffset:352}}
 @keyframes growX{from{transform:scaleX(0)}}
 @keyframes flicker{0%,100%{transform:scale(1,1)}25%{transform:scale(1.07,.93)}50%{transform:scale(.95,1.09)}75%{transform:scale(1.04,.97)}}
-@keyframes ripple{0%{opacity:.75;transform:scale(.6)}100%{opacity:0;transform:scale(7)}}
-@keyframes flash{0%{opacity:0}1.5%{opacity:.9}6%,100%{opacity:0}}
+@keyframes ripple{0%{opacity:.3;transform:scale(.6)}100%{opacity:0;transform:scale(5)}}
+@keyframes flash{0%{opacity:0;transform:scale(1)}4%{opacity:1;transform:scale(2)}20%,100%{opacity:0;transform:scale(1)}}
 @keyframes sweep{0%{opacity:0;transform:translateX(0)}1%{opacity:1}${((SWEEP / PERIOD) * 100).toFixed(2)}%{opacity:1;transform:translateX(${gridW}px)}${((SWEEP / PERIOD) * 100 + 1).toFixed(2)}%,100%{opacity:0;transform:translateX(${gridW}px)}}
 @keyframes cometPass{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(${cdx}px,${cdy}px)}7%,100%{opacity:0;transform:translate(${cdx}px,${cdy}px)}}
 ${REDUCED}`;
@@ -645,7 +655,14 @@ ${REDUCED}`;
 <style>${css}</style>
 <defs>
   <path id="snakePath" d="${snakePath}" fill="none"/>
-  <linearGradient id="beamTrail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c.hud}" stop-opacity="0"/><stop offset="1" stop-color="${c.hud}" stop-opacity="0.35"/></linearGradient>
+  <linearGradient id="beamTrail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c.hud}" stop-opacity="0"/><stop offset="1" stop-color="${c.hud}" stop-opacity="0.6"/></linearGradient>
+  <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff3d1f"><animate attributeName="stop-color" values="#ff3d1f;#ff7a1a;#ff3d1f" dur="1.3s" repeatCount="indefinite"/></stop>
+    <stop offset="0.55" stop-color="#ff9a1f"><animate attributeName="stop-color" values="#ff9a1f;#ffc23d;#ff9a1f" dur="1.7s" repeatCount="indefinite"/></stop>
+    <stop offset="1" stop-color="#ffe066"/>
+  </linearGradient>
+  <linearGradient id="flameCore" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd25a"/><stop offset="1" stop-color="#fffbe6"/></linearGradient>
+  <linearGradient id="shootTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-120" y2="-52"><stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/></linearGradient>
   <linearGradient id="cometTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${ctx}" y2="${cty}"><stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/></linearGradient>
 </defs>
 <g class="frame"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/></g>
@@ -667,6 +684,9 @@ ${legend}
 ${figureSvg}
 ${languages}
 </g>
+<g aria-hidden="true">${[[70, 40, 0, 'a', 8, 1], [520, 24, 0, 'b', 11, 4], [1130, 60, 1, 'c', 9, 2], [820, 150, 1, 'a', 13, 6], [300, 190, 0, 'c', 10, 7]]
+    .map(([x, y, m, k, dur, delay]) => `<g transform="translate(${x} ${y})${m ? ' scale(-1 1)' : ''}"><g class="shoot s${k}" style="animation-duration:${dur}s;animation-delay:${delay}s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.6" stroke-linecap="round"/><circle r="3" fill="${c.fg}"/></g></g>`)
+    .join('')}</g>
 </svg>`;
 }
 

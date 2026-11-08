@@ -20,7 +20,7 @@
   },
 
   "effects": {
-    "snake": true,
+    "snake": false,
     "constellation": true,
     "replay": true,
     "ripples": true,
