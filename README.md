@@ -1,7 +1,7 @@
 <p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/singularity-hero-dark.svg">
-  <img alt="MithrandirHEX: Red Team Operator | Vulnerability Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 4 contributions, one particle per day." src="./assets/singularity-hero-light.svg" width="100%">
+  <img alt="MithrandirHEX: Red Team Operator | Vulnerability Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 5 contributions, one particle per day." src="./assets/singularity-hero-light.svg" width="100%">
 </picture>
 </p>
 
@@ -17,7 +17,7 @@
 <p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/singularity-telemetry-dark.svg">
-  <img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 4 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-light.svg" width="100%">
+  <img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 5 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-light.svg" width="100%">
 </picture>
 </p>
 
