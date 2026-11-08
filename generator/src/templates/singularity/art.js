@@ -27,7 +27,7 @@ export const THEMES = {
   dark: {
     bg: '#04050a',
     fg: '#f4f1ea',
-    muted: '#8a90a3',
+    muted: '#b8bed0',
     hud: '#7dd3fc',
     faint: '#1b2231',
     bar: '#000000',
@@ -239,7 +239,7 @@ ${REDUCED}`;
     <circle cx="${cx}" cy="${cy}" r="${Rs * 1.05}" fill="none" stroke="${c.diskHi}" stroke-width="2" stroke-opacity="0.9" mask="url(#doppler)"/>
     ${disk('front')}
     <text class="title" x="${cx + tracking / 2}" y="452" text-anchor="middle" font-family="${THIN}" font-weight="600" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
-    ${sub ? `<text class="sub" x="${cx + 2}" y="486" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="17" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
+    ${sub ? `<text class="sub" x="${cx + 2}" y="486" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="20" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
   </g>
   <g class="bar-top">
     <rect width="${W}" height="${BAR}" fill="${c.bar}"/>
