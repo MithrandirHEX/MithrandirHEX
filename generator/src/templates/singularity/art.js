@@ -238,8 +238,8 @@ ${REDUCED}`;
     <circle cx="${cx}" cy="${cy}" r="${Rs}" fill="${c.shadow}"/>
     <circle cx="${cx}" cy="${cy}" r="${Rs * 1.05}" fill="none" stroke="${c.diskHi}" stroke-width="2" stroke-opacity="0.9" mask="url(#doppler)"/>
     ${disk('front')}
-    <text class="title" x="${cx + tracking / 2}" y="452" text-anchor="middle" font-family="${THIN}" font-weight="300" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
-    ${sub ? `<text class="sub" x="${cx + 2}" y="486" text-anchor="middle" font-family="${THIN}" font-weight="300" font-size="16" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
+    <text class="title" x="${cx + tracking / 2}" y="452" text-anchor="middle" font-family="${THIN}" font-weight="600" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
+    ${sub ? `<text class="sub" x="${cx + 2}" y="486" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="17" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
   </g>
   <g class="bar-top">
     <rect width="${W}" height="${BAR}" fill="${c.bar}"/>
@@ -338,7 +338,7 @@ export function telemetrySvg(profile, themeName, { missionName }) {
       return `<g class="ro" style="animation-delay:${(0.5 + i * 0.12).toFixed(2)}s">
   ${brackets(x, y, colW - 16, 96, 10, c.hud)}
   <text x="${x + 16}" y="${y + 26}" font-family="${MONO}" font-size="11" letter-spacing="2" fill="${c.muted}">${label}</text>
-  <text x="${x + 14}" y="${y + 66}" font-family="${THIN}" font-weight="300" font-size="38" fill="${c.fg}">${value}</text>
+  <text x="${x + 14}" y="${y + 66}" font-family="${THIN}" font-weight="600" font-size="38" fill="${c.fg}">${value}</text>
   <text x="${x + 16}" y="${y + 84}" font-family="${MONO}" font-size="10" letter-spacing="1.5" fill="${c.hud}">${unit}</text>
 </g>`;
     })
@@ -437,7 +437,7 @@ ${REDUCED}`;
   <circle cx="600" cy="${134 + 2400}" r="2400" fill="${c.planet}"/>
   <circle cx="600" cy="${134 + 2400}" r="2400" fill="none" stroke="url(#limb)" stroke-width="2"/>
   <g class="end" text-anchor="middle">
-    <text x="${600 + 6}" y="62" font-family="${THIN}" font-weight="300" font-size="22" letter-spacing="12" fill="${c.fg}">END OF TRANSMISSION</text>
+    <text x="${600 + 6}" y="62" font-family="${THIN}" font-weight="600" font-size="22" letter-spacing="12" fill="${c.fg}">END OF TRANSMISSION</text>
     <text x="600" y="90" font-family="${MONO}" font-size="11" letter-spacing="2.5" fill="${c.muted}">@${escapeXml(profile.login.toUpperCase())}  ·  ${escapeXml(signoff.toUpperCase())}</text>
   </g>
 </g>
