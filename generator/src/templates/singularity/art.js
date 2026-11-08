@@ -311,7 +311,7 @@ function closedCurve(points, samples = 10) {
 export function telemetrySvg(profile, themeName, { missionName }) {
   const c = THEMES[themeName];
   const W = 1200;
-  const H = 600;
+  const H = 440;
   const n = missionNumbers(profile);
   const months = monthlySeries(profile.contributions?.days || []);
   const maxMonth = Math.max(1, ...months.map((m) => m.total));
@@ -319,8 +319,8 @@ export function telemetrySvg(profile, themeName, { missionName }) {
 
   // Activity radar: one vertex per month, radius by that month's contributions.
   const ox = 230;
-  const oy = 330;
-  const R = 150;
+  const oy = 252;
+  const R = 140;
   const angleOf = (i) => ((-90 + (i * 360) / months.length) * Math.PI) / 180;
   const pts = months.map((m, i) => {
     const r = 30 + (R - 30) * Math.sqrt(m.total / maxMonth);
@@ -356,40 +356,6 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   ].join('');
   const meta = `${fmt(n.stars)} STARS  ·  ${fmt(n.followers)} FOLLOWERS  ·  ${n.years} YR ON GITHUB`;
 
-  // Arsenal: three rows of chips. Languages and tools come from profile.config.json; languages that GitHub
-  // detects in the public repositories are appended automatically with their share. Entries starting with
-  // "(" are placeholders and are drawn dashed and dim until they are replaced.
-  const arsenal = profile.arsenal || {};
-  const configured = arsenal.languages || [];
-  const detected = (profile.languages || [])
-    .filter((l) => l.share >= 0.03 && !configured.some((x) => String(x).toLowerCase() === l.name.toLowerCase()))
-    .slice(0, 6)
-    .map((l) => `${l.name} ${Math.round(l.share * 100)}%`);
-  const arsenalRows = [
-    ['LANGUAGES', [...configured, ...detected]],
-    ['TOOLS', arsenal.tools || []],
-    ['ENVIRONMENTS', arsenal.environments || []],
-  ];
-  const chipWidth = (text) => Math.round(text.length * 7.4 + 22);
-  const maxX = W - 40;
-  const arsenalSvg = arsenalRows
-    .map(([label, items], k) => {
-      if (!items.length) return '';
-      const ly = 410 + k * 62;
-      let x = col[0];
-      let chips = '';
-      items.forEach((item, i) => {
-        const text = String(item).toUpperCase();
-        const w = chipWidth(text);
-        if (x + w > maxX) return;
-        const ph = text.startsWith('(');
-        chips += `<g class="ro" style="animation-delay:${(1.4 + k * 0.15 + i * 0.05).toFixed(2)}s"><rect x="${x}" y="${ly + 10}" width="${w}" height="26" rx="5" fill="${c.hud}" fill-opacity="${ph ? 0 : 0.08}" stroke="${c.hud}" stroke-opacity="${ph ? 0.35 : 0.6}"${ph ? ' stroke-dasharray="3 3"' : ''}/><text x="${x + w / 2}" y="${ly + 28}" text-anchor="middle" font-family="${MONO}" font-size="12" font-weight="700" fill="${ph ? c.muted : c.fg}">${escapeXml(text)}</text></g>`;
-        x += w + 8;
-      });
-      return `<text x="${col[0]}" y="${ly}" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="3" fill="${c.muted}">${label}</text>${chips}`;
-    })
-    .join('');
-
   const css = `
 .frame{animation:fade 1s ease-out both}
 .orbit{stroke-dasharray:${orbit.length};animation:draw 2.8s ${EXPO} .4s both}
@@ -418,7 +384,6 @@ ${REDUCED}`;
   <text x="${W - 40}" y="46" text-anchor="end" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="2" fill="${c.muted}">${escapeXml(missionName.toUpperCase())}  ·  @${escapeXml(profile.login.toUpperCase())}</text>
   <line x1="40" y1="62" x2="${W - 40}" y2="62" stroke="${c.faint}"/>
   <line x1="${col[0]}" y1="232" x2="${W - 40}" y2="232" stroke="${c.faint}"/>
-  <line x1="${col[0]}" y1="384" x2="${W - 40}" y2="384" stroke="${c.faint}"/>
   ${grid}${spokes}
   <text x="${ox}" y="${H - 14}" text-anchor="middle" font-family="${MONO}" font-size="11" font-weight="700" letter-spacing="2" fill="${c.muted}">ACTIVITY  ·  CONTRIBUTIONS PER MONTH</text>
   <text x="${col[0]}" y="366" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="2" fill="${c.muted}">${meta}</text>
@@ -427,7 +392,6 @@ ${REDUCED}`;
 <path class="orbit" d="${orbit.d}" fill="none" stroke="${c.hud}" stroke-width="2.5" stroke-linejoin="round"/>
 ${peak ? `<g class="peak"><circle class="ping" cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="5" fill="none" stroke="${c.hud}" stroke-width="1.5"/><circle cx="${r1(peak[0])}" cy="${r1(peak[1])}" r="4.5" fill="${c.hud}"/></g>` : ''}
 ${readoutSvg}
-${arsenalSvg}
 <g class="scan" opacity="0"><rect x="0" y="14" width="80" height="${H - 28}" fill="url(#scanTrail)"/><rect x="79" y="14" width="1.5" height="${H - 28}" fill="${c.hud}"/></g>
 </svg>`;
 }
