@@ -5,12 +5,15 @@
 import { heroSvg, missionNumbers, roman, telemetrySvg, transmissionEndSvg } from './art';
 import { arsenalGroups, arsenalSvg } from './arsenal';
 import { renderAbout } from './about';
+import { dividerSvg, typingPhrases, typingSvg } from './ornaments';
 import { renderLinks } from '../../lib/links';
 import { renderSponsorWall } from '../../lib/sponsors';
 
 const ASSETS = {
   heroDark: 'assets/singularity-hero-dark.svg',
   arsenalDark: 'assets/singularity-arsenal-dark.svg',
+  typingDark: 'assets/singularity-typing-dark.svg',
+  dividerDark: 'assets/singularity-divider-dark.svg',
   heroLight: 'assets/singularity-hero-light.svg',
   telemetryDark: 'assets/singularity-telemetry-dark.svg',
   telemetryLight: 'assets/singularity-telemetry-light.svg',
@@ -60,6 +63,13 @@ export function render(p) {
     '',
   ];
 
+  // Ornaments: a typing strip under the identity, and a star divider between the blocks.
+  const typing = typingSvg(p, 'dark');
+  const divider = dividerSvg(p, 'dark');
+  const rule = () => out.push(picture(ASSETS.dividerDark, ASSETS.dividerDark, ''), '');
+  if (typing) out.push(picture(ASSETS.typingDark, ASSETS.typingDark, `Focus areas: ${typingPhrases(p).join(', ')}.`), '');
+  rule();
+
   const about = renderAbout(p);
   if (about) {
     out.push(about);
@@ -73,6 +83,7 @@ export function render(p) {
   const arsenal = arsenalSvg(p, 'dark');
   if (arsenal) {
     const names = arsenalGroups(p).flatMap(([, items]) => items.map((i) => (typeof i === 'string' ? i : i.name)));
+    rule();
     out.push(
       '## 🧰 Languages & Tools',
       '',
@@ -81,6 +92,7 @@ export function render(p) {
     );
   }
 
+  rule();
   out.push(
     '## 📊 GitHub Stats',
     '',
@@ -118,6 +130,7 @@ export function render(p) {
 
   if (wall.html) out.push(wall.html, '');
 
+  rule();
   out.push(picture(ASSETS.endDark, ASSETS.endLight, `End of transmission. ${opts.signoff}.`));
 
   return {
@@ -126,6 +139,8 @@ export function render(p) {
       ...contact.assets,
       ...wall.assets,
       ...(arsenal ? { [ASSETS.arsenalDark]: arsenal } : {}),
+      ...(typing ? { [ASSETS.typingDark]: typing } : {}),
+      [ASSETS.dividerDark]: divider,
       [ASSETS.heroDark]: heroSvg(p, 'dark', opts),
       [ASSETS.heroLight]: heroSvg(p, 'light', opts),
       [ASSETS.telemetryDark]: telemetrySvg(p, 'dark', opts),
