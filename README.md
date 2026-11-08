@@ -1,19 +1,33 @@
-<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 19 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
+<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 20 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
 
 <p align="center"><b>MithrandirHEX</b> · Security Researcher</p>
 
 
-> **Mission brief.** (............... 2-3 sentences: who you are, what you research, what you build ...............)
->
-> **Current objective.** (............... what you are researching or building right now ...............)
+### 🛰️ About Me
+
+🔐 **Security Researcher**
+
+> 🔎 Passionate about uncovering software vulnerabilities, analyzing binaries, and simulating real-world attacks.
+
+- I specialize in offensive security research, vulnerability analysis, and understanding how complex systems behave under the hood.
+- Dedicated to sharing insights, write-ups, and research tools with the cybersecurity community.
+- Always curious. Always exploring the unknown.
+
+---
+
+<table>
+<tr><td>🎯 <b>Core focus</b></td><td>Vulnerability Research, Offensive Security</td></tr>
+<tr><td>⚙️ <b>Tech stack</b></td><td>C, C++, Python, ASM, Linux/Unix</td></tr>
+<tr><td>📡 <b>Connect</b></td><td>Facebook: (...............)</td></tr>
+</table>
 
 #### Languages & Tools
 
-<p align="center"><img alt="Languages and tools: (.......), (.......), (.......)." src="./assets/singularity-arsenal-dark.svg" width="100%"></p>
+<p align="center"><img alt="Languages and tools: C, C++, Python, Assembly, (.......), Linux." src="./assets/singularity-arsenal-dark.svg" width="100%"></p>
 
 #### Recon
 
-<p align="center"><img alt="Recon stats for Operation Zero: 19 contributions in the last 12 months, 17 commits, 0 pull requests, 1 active days, longest streak 1 days, 1 public repositories, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
+<p align="center"><img alt="Recon stats for Operation Zero: 20 contributions in the last 12 months, 18 commits, 0 pull requests, 1 active days, longest streak 1 days, 1 public repositories, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
 
 <details>
 <summary><sub>How to read the graphics</sub></summary>
