@@ -17,15 +17,10 @@ const ASSETS = {
 
 const html = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function picture(dark, light, alt) {
-  return [
-    '<p align="center">',
-    '<picture>',
-    `  <source media="(prefers-color-scheme: dark)" srcset="./${dark}">`,
-    `  <img alt="${html(alt)}" src="./${light}" width="100%">`,
-    '</picture>',
-    '</p>',
-  ].join('\n');
+// Always the dark artwork, whatever theme the visitor uses. The `light` argument is kept so the
+// template's call sites stay unchanged; switch back to a <picture> element to restore theme-aware images.
+function picture(dark, _light, alt) {
+  return `<p align="center"><img alt="${html(alt)}" src="./${dark}" width="100%"></p>`;
 }
 
 export function defaultMissionName(p) {
