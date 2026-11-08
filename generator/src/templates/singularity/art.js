@@ -100,22 +100,22 @@ const fmt = (n) => n.toLocaleString('en-US');
 export function heroSvg(profile, themeName, { missionName }) {
   const c = THEMES[themeName];
   const W = 1200;
-  const H = 560;
+  const H = 760;
   const BAR = 56;
   const cx = 600;
-  const cy = 262;
+  const cy = 300;
   const TILT = -7;
   const SQUASH = 0.19;
-  const Rs = 84; // shadow radius
-  const Rin = 118;
-  const Rout = 340;
+  const Rs = 100; // shadow radius
+  const Rin = 140;
+  const Rout = 400;
   const rand = seededRandom(`singularity:${profile.login}`);
   const n = missionNumbers(profile);
 
   // Starfield; every ninth star twinkles (loop 1 of 2).
   let stars = '';
   let twinklers = '';
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 260; i++) {
     const x = r1(rand() * W);
     const y = r1(BAR + rand() * (H - BAR * 2));
     const big = rand() > 0.93;
@@ -174,7 +174,7 @@ export function heroSvg(profile, themeName, { missionName }) {
 </g>`;
 
   const name = (profile.name || profile.login).toUpperCase();
-  const nameSize = Math.round(Math.max(26, Math.min(46, 1000 / (name.length * 1.05))));
+  const nameSize = Math.round(Math.max(26, Math.min(58, 1000 / (name.length * 1.05))));
   const tracking = nameSize * 0.42;
   const sub = String(profile.headline || '').slice(0, 96);
   const bottomLine = `${fmt(n.total)} CONTRIBUTIONS  ·  ${fmt(n.active)} DAYS ACTIVE IN GRID  ·  MAX EXPLOIT STREAK ${n.streak} DAYS`;
@@ -207,7 +207,7 @@ ${REDUCED}`;
     <stop offset="0" stop-color="#fff"/><stop offset="0.5" stop-color="#c4c4c4"/><stop offset="1" stop-color="#4a4a4a"/>
   </linearGradient>
   <mask id="doppler" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="url(#dop)"/></mask>
-  <radialGradient id="haze" cx="${cx}" cy="${cy}" r="430" gradientUnits="userSpaceOnUse">
+  <radialGradient id="haze" cx="${cx}" cy="${cy}" r="540" gradientUnits="userSpaceOnUse">
     <stop offset="0" stop-color="${c.haze}" stop-opacity="${c.hazeOpacity}"/><stop offset="1" stop-color="${c.haze}" stop-opacity="0"/>
   </radialGradient>
   <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
@@ -238,8 +238,8 @@ ${REDUCED}`;
     <circle cx="${cx}" cy="${cy}" r="${Rs}" fill="${c.shadow}"/>
     <circle cx="${cx}" cy="${cy}" r="${Rs * 1.05}" fill="none" stroke="${c.diskHi}" stroke-width="2" stroke-opacity="0.9" mask="url(#doppler)"/>
     ${disk('front')}
-    <text class="title" x="${cx + tracking / 2}" y="452" text-anchor="middle" font-family="${THIN}" font-weight="600" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
-    ${sub ? `<text class="sub" x="${cx + 2}" y="486" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="20" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
+    <text class="title" x="${cx + tracking / 2}" y="568" text-anchor="middle" font-family="${THIN}" font-weight="600" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
+    ${sub ? `<text class="sub" x="${cx + 2}" y="612" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="20" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
   </g>
   <g class="bar-top">
     <rect width="${W}" height="${BAR}" fill="${c.bar}"/>
