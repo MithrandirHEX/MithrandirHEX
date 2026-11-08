@@ -400,40 +400,50 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
     )
     .join('');
 
-  // A serpent of starlight patrols the grid: down one week, up the next, then back along the bottom edge and
-  // round again. Every segment follows the same closed path a little behind the one in front (a negative
-  // `begin` puts it that far ahead of the tail), so the body keeps its shape and the loop has no seam.
-  const cx0 = gx + cell / 2;
-  const cyTop = gy + cell / 2;
-  const cyBot = gy + 6 * pitch + cell / 2;
-  const cyBelow = cyBot + pitch;
-  const marginX = cx0 - pitch;
-  const startY = (cols - 1) % 2 === 0 ? cyTop : cyBot;
-  const pts = [];
-  for (let k = 0; k < cols; k += 1) {
-    const x = cx0 + k * pitch;
-    const down = (cols - 1 - k) % 2 === 0;
-    const y0 = down ? cyTop : cyBot;
-    const y1 = down ? cyBot : cyTop;
-    if (k === 0) pts.push([x, y0]);
-    pts.push([x, y1]);
-    if (k < cols - 1) pts.push([x + pitch, y1]);
+  // A serpent of starlight slithers across the grid in a wave. Its path is one closed loop: left to right along
+  // a sine wave, then back along the mirrored wave (they meet at both ends because the wave has a whole number
+  // of half-periods, so the loop has no seam). Every segment follows that path a little behind the one in front
+  // (a negative `begin` puts it that far ahead of the tail), the body tapers towards the tail, and
+  // `rotate="auto"` turns the head to face the way it is going.
+  // The route has no pattern to spot: waypoints are drawn at random (from a seed made of the login, so the
+  // route is the same every time the picture is rebuilt), first left to right and then back, each one
+  // wandering up or down from the last by a random amount, then joined by a smooth closed curve.
+  const sx0 = gx + cell / 2;
+  const sx1 = gx + (cols - 1) * pitch + cell / 2;
+  const span = sx1 - sx0;
+  const yLo = gy + cell / 2 + 6;
+  const yHi = gy + 6 * pitch + cell / 2 - 6;
+  const wander = seededRandom(`snake:${profile.login}`);
+  const WAYS = 15;
+  let wy = (yLo + yHi) / 2;
+  const nextY = () => {
+    wy = Math.min(yHi, Math.max(yLo, wy + (wander() - 0.5) * 2 * 80));
+    return wy;
+  };
+  const way = [];
+  for (let round = 0; round < 2; round += 1) {
+    for (let i = 0; i < WAYS; i += 1) {
+      const edge = i === 0 || i === WAYS - 1;
+      way.push([sx0 + (span * i) / (WAYS - 1) + (edge ? 0 : (wander() - 0.5) * 50), nextY()]);
+    }
+    for (let i = WAYS - 2; i > 0; i -= 1) way.push([sx0 + (span * i) / (WAYS - 1) + (wander() - 0.5) * 50, nextY()]);
   }
-  pts.push([cx0 + (cols - 1) * pitch, cyBelow], [marginX, cyBelow], [marginX, startY], [cx0, startY]);
-  const pathLen = pts.reduce((sum, p, i) => (i ? sum + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
-  const path = `M${pts.map((p) => `${r1(p[0])} ${r1(p[1])}`).join('L')}`;
-  const LAP = 40;
-  const SEG = 10;
-  const lag = (pitch / pathLen) * LAP;
+  const { d: snakePath, length: pathLen } = closedCurve(way, 14);
+  const SEG = 26;
+  const GAP = 6.5;
+  const LAP = r1(pathLen / 150);
+  const lag = (GAP / pathLen) * LAP;
   const snake = Array.from({ length: SEG }, (_, i) => {
-    const head = i === 0;
+    const t = i / (SEG - 1);
+    const radius = i === 0 ? 9.5 : Math.max(2.4, 8 - i * 0.26);
+    const op = i === 0 ? 1 : Math.max(0.35, 0.95 - t * 0.6);
     const begin = i === SEG - 1 ? '0s' : `-${((SEG - 1 - i) * lag).toFixed(3)}s`;
-    const op = head ? 1 : Math.max(0.22, 0.95 - i * 0.085);
-    return `<g><animateMotion dur="${LAP}s" begin="${begin}" repeatCount="indefinite" path="${path}"/>${
-      head ? `<rect x="${-cell}" y="${-cell}" width="${cell * 2}" height="${cell * 2}" rx="${cell / 2}" fill="${c.diskMid}" fill-opacity="0.3"/>` : ''
-    }<rect x="${-cell / 2}" y="${-cell / 2}" width="${cell}" height="${cell}" rx="3" fill="${head ? c.diskHi : c.hud}" fill-opacity="${op.toFixed(2)}"/>${
-      head ? `<circle cx="${r1(cell * 0.18)}" cy="${r1(-cell * 0.12)}" r="1.6" fill="${c.bg}"/>` : ''
-    }</g>`;
+    const fill = i === 0 ? c.diskHi : t < 0.5 ? c.hud : c.diskMid;
+    const headParts =
+      i === 0
+        ? `<circle r="18" fill="${c.diskMid}" fill-opacity="0.22"/><circle r="${r1(radius)}" fill="${fill}"/><circle cx="4.5" cy="-4" r="1.9" fill="${c.bg}"/><circle cx="4.5" cy="4" r="1.9" fill="${c.bg}"/>`
+        : `<circle r="${r1(radius)}" fill="${fill}" fill-opacity="${op.toFixed(2)}"/>`;
+    return `<g><animateMotion dur="${LAP}s" begin="${begin}" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#snakePath"/></animateMotion>${headParts}</g>`;
   })
     .reverse()
     .join('');
@@ -525,10 +535,11 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 @keyframes growX{from{transform:scaleX(0)}}
 ${REDUCED}`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
     `GitHub stats: ${fmt(allTotal)} total contributions, current streak ${cur.len} days, longest streak ${longest.len} days. ${fmt(n.total)} contributions in the last 12 months, ${fmt(profile.commits || 0)} commits, ${fmt(profile.pullRequests || 0)} pull requests, ${fmt(profile.issues || 0)} issues, ${fmt(n.stars)} stars, ${fmt(profile.publicRepos || 0)} public repositories.`
   )}">
 <style>${css}</style>
+<defs><path id="snakePath" d="${snakePath}" fill="none"/></defs>
 <g class="frame"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/></g>
 <g transform="translate(0 ${-SHIFT})">
 <g class="frame">
