@@ -170,8 +170,25 @@ export function heroSvg(profile, themeName, { missionName }) {
     <g class="spin s0"><use xlink:href="#b0"/></g>
     <g class="spin s1"><use xlink:href="#b1"/></g>
     <g class="spin s2"><use xlink:href="#b2"/></g>
+    <g class="spin s3"><use xlink:href="#b3"/></g>
   </g>
 </g>`;
+
+  // Repository markers: one bright point on the disk per public repository. Each sits at a stable
+  // position derived from the repo name; more stars means a bigger point. The inverse scale cancels
+  // the disk's squash so every point stays round.
+  const repoDots = (profile.repoPoints || [])
+    .slice(0, 80)
+    .map((repo) => {
+      const rr = seededRandom(`repo:${repo.name}`);
+      const dist = Rin + (Rout - Rin) * (0.1 + 0.8 * rr());
+      const ang = rr() * TAU;
+      const px = r1(Math.cos(ang) * dist);
+      const py = r1(Math.sin(ang) * dist);
+      const size = r1(3.2 + Math.min(4, Math.sqrt(repo.stars || 0) * 1.1));
+      return `<g transform="translate(${px} ${py}) scale(1 ${r1(1 / SQUASH)})"><circle r="${r1(size * 2.6)}" fill="${c.diskMid}" fill-opacity="0.22"/><circle r="${size}" fill="${c.diskHi}"/></g>`;
+    })
+    .join('');
 
   const name = (profile.name || profile.login).toUpperCase();
   const nameSize = Math.round(Math.max(26, Math.min(58, 1000 / (name.length * 1.05))));
@@ -187,7 +204,7 @@ export function heroSvg(profile, themeName, { missionName }) {
 .sub{animation:rise 1.6s ${EXPO} 1.6s both}
 .hud{animation:fade 1.2s ease-out 2s both}
 .spin{animation-name:spin;animation-timing-function:linear;animation-iteration-count:infinite}
-.s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}
+.s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}.s3{animation-duration:90s}
 .tw{animation:twinkle 4.5s ease-in-out infinite}
 @keyframes fade{from{opacity:0}}
 @keyframes barTop{from{transform:translateY(-${BAR}px)}}
@@ -216,6 +233,7 @@ ${REDUCED}`;
   <g id="b0" fill="none" stroke-linecap="round">${bands[0]}</g>
   <g id="b1" fill="none" stroke-linecap="round">${bands[1]}</g>
   <g id="b2" fill="none" stroke-linecap="round">${bands[2]}</g>
+  <g id="b3">${repoDots}</g>
 </defs>
 <g clip-path="url(#frame)">
   <rect width="${W}" height="${H}" fill="${c.bg}"/>

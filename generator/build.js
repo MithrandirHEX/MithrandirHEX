@@ -77,6 +77,8 @@ async function fetchLive() {
     followers: u.followers.totalCount,
     totalStars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     repos: candidates,
+    // Every public, non-fork repository (profile repo excluded): one point each on the accretion disk.
+    repoPoints: repos.map((r) => ({ name: r.name, stars: r.stargazerCount })),
     featured: candidates.slice(0, 4).map((r) => r.name),
     languages,
     contributions: { total: u.contributionsCollection.contributionCalendar.totalContributions, days },
@@ -95,7 +97,8 @@ function fetchSample() {
   });
   return {
     login, name: login, headline: '', website: '', email: '', links: [], joinedYear: new Date().getFullYear() - 1,
-    followers: 0, totalStars: 0, repos: [], featured: [], languages: [{ name: 'Python', share: 1 }],
+    followers: 0, totalStars: 0, repos: [], featured: [],
+    repoPoints: ['recon-notes', 'exploit-lab', 'fuzz-harness', 'writeups'].map((name, i) => ({ name, stars: i * 3 })), languages: [{ name: 'Python', share: 1 }],
     contributions: { total: days.reduce((s, d) => s + d.count, 0), days },
   };
 }
