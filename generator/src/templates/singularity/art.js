@@ -303,97 +303,184 @@ function closedCurve(points, samples = 10) {
 export function telemetrySvg(profile, themeName, { missionName }) {
   const c = THEMES[themeName];
   const W = 1200;
-  const H = 480;
   const n = missionNumbers(profile);
   const days = profile.contributions?.days || [];
-  const months = monthlySeries(days);
-  const maxMonth = Math.max(1, ...months.map((m) => m.total));
-  const busiest = months.reduce((best, m, i) => (m.total > months[best].total ? i : best), 0);
+  const all = profile.allTime?.days?.length ? profile.allTime.days : days;
+  const allTotal = profile.allTime ? profile.allTime.total : n.total;
 
-  // Current streak: consecutive active days ending today (today may not have a contribution yet).
-  let current = 0;
-  let di = days.length - 1;
-  if (di >= 0 && days[di].count === 0) di -= 1;
-  for (; di >= 0 && days[di].count > 0; di -= 1) current += 1;
+  const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const dateText = (iso, year = false) => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${MON[m - 1]} ${d}${year ? `, ${y}` : ''}`;
+  };
 
-  // One stat row: label on the left, value on the right, a hairline underneath.
-  const row = (x, w, y, label, value, delay) => `<g class="ro" style="animation-delay:${delay.toFixed(2)}s">
-  <text x="${x}" y="${y}" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1.5" fill="${c.fg}">${label}</text>
-  <text x="${x + w}" y="${y + 3}" text-anchor="end" font-family="${THIN}" font-weight="700" font-size="28" fill="${c.hud}">${value}</text>
-  <line x1="${x}" y1="${y + 15}" x2="${x + w}" y2="${y + 15}" stroke="${c.faint}"/>
+  // Streaks over the whole history: the longest run, and the run that ends today (or yesterday, since today
+  // may not have a contribution yet).
+  const runs = (list) => {
+    let longest = { len: 0 };
+    let run = 0;
+    let start = null;
+    for (const d of list) {
+      if (d.count > 0) {
+        if (!run) start = d.date;
+        run += 1;
+        if (run > longest.len) longest = { len: run, start, end: d.date };
+      } else {
+        run = 0;
+      }
+    }
+    let i = list.length - 1;
+    if (i >= 0 && list[i].count === 0) i -= 1;
+    let cur = { len: 0 };
+    if (i >= 0 && list[i].count > 0) {
+      let j = i;
+      while (j >= 0 && list[j].count > 0) j -= 1;
+      cur = { len: i - j, start: list[j + 1].date, end: list[i].date };
+    }
+    return { longest, cur };
+  };
+  const { longest, cur } = runs(all);
+  const range = (s) => (s.len ? (s.start === s.end ? dateText(s.start, true) : `${dateText(s.start)} – ${dateText(s.end, true)}`) : 'NO STREAK YET');
+  const since = profile.createdAt ? `${dateText(profile.createdAt, true)} – PRESENT` : 'LAST 12 MONTHS';
+
+  // Streak card: total, current streak (ring with a flame) and longest streak.
+  const big = (cx, value, label, sub, delay) => `<g class="ro" style="animation-delay:${delay}s">
+  <text x="${cx}" y="190" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="68" fill="${c.hud}">${value}</text>
+  <text x="${cx}" y="238" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="2" fill="${c.fg}">${label}</text>
+  <text x="${cx}" y="262" text-anchor="middle" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1" fill="${c.muted}">${sub}</text>
 </g>`;
-  const title = (x, text) => `<text x="${x}" y="100" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="3" fill="${c.muted}">${text}</text>`;
+  const flame = 'M12 2c.8 3.2-1.2 4.6-2.6 6.6C8 10.6 7 12.1 7 14a5 5 0 0 0 10 0c0-2-1.1-3.4-2.1-4.6-.1 1.6-.9 2.6-1.9 2.9C13.700 9.200 13.100 5.200 12 2z';
+  const streakCard = `${big(226, fmt(allTotal), 'TOTAL CONTRIBUTIONS', since, 0.4)}
+<g class="ro" style="animation-delay:0.5s">
+  <circle class="ring" cx="600" cy="152" r="54" fill="none" stroke="${c.hud}" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="600" cy="98" r="17" fill="${c.bg}"/>
+  <path transform="translate(587 84) scale(1.08)" d="${flame}" fill="${c.hud}"/>
+  <text x="600" y="172" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="54" fill="${c.fg}">${fmt(cur.len)}</text>
+  <text x="600" y="238" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="2" fill="${c.hud}">CURRENT STREAK</text>
+  <text x="600" y="262" text-anchor="middle" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1" fill="${c.muted}">${range(cur)}</text>
+</g>
+${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 
-  // Column 1: overview.
-  const c1 = 40;
-  const w1 = 360;
-  const overview = [
-    ['TOTAL STARS', fmt(n.stars)],
+  // Contribution grid: one square per day, one column per week (Sunday first), five brightness levels.
+  const maxDay = Math.max(1, ...days.map((d) => d.count));
+  const level = (count) => (count <= 0 ? 0 : Math.min(4, Math.ceil((count / maxDay) * 4)));
+  const LV = [[c.faint, 0.9], [c.diskLo, 1], [c.diskMid, 0.6], [c.diskMid, 1], [c.diskHi, 1]];
+  const weekday = (iso) => {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  };
+  let col = -1;
+  const grid = days.map((d, i) => {
+    const wd = weekday(d.date);
+    if (i === 0 || wd === 0) col += 1;
+    return { ...d, col, wd };
+  });
+  const cols = col + 1;
+  const pitch = Math.floor((W - 80) / Math.max(cols, 53));
+  const cell = pitch - 4;
+  const gx = 40 + Math.round((W - 80 - cols * pitch) / 2);
+  const gy = 354;
+  const gridBottom = gy + 7 * pitch;
+  const byCol = new Map();
+  grid.forEach((g) => byCol.set(g.col, [...(byCol.get(g.col) || []), g]));
+  const todayIso = grid.length ? grid[grid.length - 1].date : '';
+  const cells = [...byCol]
+    .map(
+      ([cIdx, list]) =>
+        `<g class="col" style="animation-delay:${(0.5 + cIdx * 0.012).toFixed(3)}s">${list
+          .map((g) => {
+            const [fill, op] = LV[level(g.count)];
+            const today = g.date === todayIso;
+            return `<rect x="${gx + g.col * pitch}" y="${gy + g.wd * pitch}" width="${cell}" height="${cell}" rx="3" fill="${fill}" fill-opacity="${op}"${today ? ` stroke="${c.fg}" stroke-width="1.5"` : ''}/>`;
+          })
+          .join('')}</g>`
+    )
+    .join('');
+
+  // Month labels above the grid; a label is dropped when the next month starts less than 3 columns later.
+  const monthMarks = [];
+  let prevMonth = -1;
+  for (const [cIdx, list] of byCol) {
+    const m = Number(list[0].date.slice(5, 7)) - 1;
+    if (m !== prevMonth) {
+      prevMonth = m;
+      monthMarks.push({ cIdx, m });
+    }
+  }
+  const monthLabels = monthMarks
+    .filter((mk, i) => !monthMarks[i + 1] || monthMarks[i + 1].cIdx - mk.cIdx >= 3)
+    .map((mk) => `<text x="${gx + mk.cIdx * pitch}" y="${gy - 12}" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="1" fill="${c.muted}">${MON[mk.m]}</text>`)
+    .join('');
+
+  const legendY = gridBottom + 26;
+  const legendX = W - 40 - 44 - 5 * pitch;
+  const legend = `<text x="${legendX - 8}" y="${legendY + cell - 3}" text-anchor="end" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="1" fill="${c.muted}">LESS</text>${LV.map(
+    ([fill, op], k) => `<rect x="${legendX + k * pitch}" y="${legendY}" width="${cell}" height="${cell}" rx="3" fill="${fill}" fill-opacity="${op}"/>`
+  ).join('')}<text x="${W - 40}" y="${legendY + cell - 3}" text-anchor="end" font-family="${MONO}" font-size="12" font-weight="700" letter-spacing="1" fill="${c.muted}">MORE</text>`;
+
+  // Row of figures under the grid.
+  const dividerY = legendY + cell + 22;
+  const valY = dividerY + 50;
+  const labY = valY + 26;
+  const figures = [
+    ['STARS', fmt(n.stars)],
     ['COMMITS · 12 MO', fmt(profile.commits || 0)],
     ['PULL REQUESTS', fmt(profile.pullRequests || 0)],
-    ['ISSUES OPENED', fmt(profile.issues || 0)],
+    ['ISSUES', fmt(profile.issues || 0)],
+    ['PUBLIC REPOS', fmt(profile.publicRepos || 0)],
     ['CONTRIBUTED TO', fmt(profile.contributedTo || 0)],
-  ]
-    .map(([label, value], k) => row(c1, w1, 146 + k * 40, label, value, 0.4 + k * 0.1))
-    .join('');
-
-  // Column 2: streak.
-  const c2 = 450;
-  const w2 = 320;
-  const streak = `<g class="ro" style="animation-delay:0.5s">
-  <text x="${c2 - 3}" y="214" font-family="${THIN}" font-weight="700" font-size="96" fill="${c.fg}">${fmt(current)}</text>
-  <text x="${c2}" y="240" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="2.5" fill="${c.hud}">CURRENT STREAK · DAYS</text>
-</g>${row(c2, w2, 282, 'LONGEST STREAK', fmt(n.streak), 0.8)}${row(c2, w2, 322, 'TOTAL · 12 MONTHS', fmt(n.total), 0.9)}`;
-
-  // Column 3: top languages.
-  const c3 = 830;
-  const w3 = 330;
-  const langs = (profile.languages || []).filter((l) => l.share >= 0.005).slice(0, 4);
-  const languages = langs.length
-    ? langs
-        .map((l, k) => {
-          const y = 146 + k * 48;
-          const pct = Math.max(1, Math.round(l.share * 100));
-          const fill = Math.max(4, l.share * w3);
-          return `<g class="ro" style="animation-delay:${(0.5 + k * 0.1).toFixed(2)}s">
-  <text x="${c3}" y="${y}" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.fg}">${escapeXml(l.name.toUpperCase())}</text>
-  <text x="${c3 + w3}" y="${y}" text-anchor="end" font-family="${MONO}" font-size="15" font-weight="700" fill="${c.hud}">${pct}%</text>
-  <rect x="${c3}" y="${y + 10}" width="${w3}" height="8" rx="4" fill="${c.faint}"/>
-  <rect class="seg" x="${c3}" y="${y + 10}" width="${r1(fill)}" height="8" rx="4" fill="${c.hud}" style="animation-delay:${(0.9 + k * 0.1).toFixed(2)}s"/>
+  ];
+  const fw = (W - 80) / figures.length;
+  const figureSvg = figures
+    .map(([label, value], k) => {
+      const x = 40 + k * fw;
+      return `<g class="ro" style="animation-delay:${(1 + k * 0.08).toFixed(2)}s">${k ? `<line x1="${r1(x - 14)}" y1="${valY - 34}" x2="${r1(x - 14)}" y2="${labY + 6}" stroke="${c.faint}"/>` : ''}
+  <text x="${r1(x)}" y="${valY}" font-family="${THIN}" font-weight="700" font-size="36" fill="${c.fg}">${value}</text>
+  <text x="${r1(x)}" y="${labY}" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1.5" fill="${c.muted}">${label}</text>
 </g>`;
-        })
-        .join('')
-    : `<text class="ro" x="${c3}" y="146" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.muted}">NO PUBLIC CODE YET</text>`;
-
-  // Monthly activity bars across the bottom.
-  const slot = (W - 80) / 12;
-  const barW = 44;
-  const base = 440;
-  const maxH = 52;
-  const bars = months
-    .map((m, k) => {
-      const x = 40 + slot * k + (slot - barW) / 2;
-      const h = m.total > 0 ? Math.max(5, (m.total / maxMonth) * maxH) : 3;
-      const hot = k === busiest && m.total > 0;
-      return `<rect class="bar" x="${r1(x)}" y="${r1(base - h)}" width="${barW}" height="${r1(h)}" rx="3" fill="${m.total > 0 ? c.hud : c.faint}" fill-opacity="${m.total > 0 ? (hot ? 1 : 0.55) : 1}" style="animation-delay:${(0.9 + k * 0.05).toFixed(2)}s"/>${
-        hot ? `<text x="${r1(x + barW / 2)}" y="${r1(base - h - 9)}" text-anchor="middle" font-family="${MONO}" font-size="14" font-weight="700" fill="${c.hud}">${fmt(m.total)}</text>` : ''
-      }<text x="${r1(x + barW / 2)}" y="${base + 22}" text-anchor="middle" font-family="${MONO}" font-size="13" font-weight="700" fill="${hot ? c.hud : c.muted}">${m.label}</text>`;
     })
     .join('');
+
+  // Top languages: only when GitHub has found code in the public repositories.
+  const langs = (profile.languages || []).filter((l) => l.share >= 0.01).slice(0, 6);
+  let languages = '';
+  let H = labY + 30;
+  if (langs.length) {
+    const ly = labY + 24;
+    const sw = W - 80;
+    const shades = [1, 0.74, 0.54, 0.4, 0.28, 0.18];
+    let cursor = 40;
+    const parts = langs
+      .map((l, k) => {
+        const w = Math.max(4, l.share * sw - 3);
+        const seg = `<g class="seg" style="animation-delay:${(1.2 + k * 0.1).toFixed(2)}s"><rect x="${r1(cursor)}" y="${ly + 36}" width="${r1(w)}" height="10" rx="3" fill="${c.hud}" fill-opacity="${shades[k] ?? 0.12}"/>${
+          w > 110
+            ? `<text x="${r1(cursor)}" y="${ly + 70}" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="1" fill="${c.fg}">${escapeXml(l.name.toUpperCase())} ${Math.round(l.share * 100)}%</text>`
+            : ''
+        }</g>`;
+        cursor += w + 3;
+        return seg;
+      })
+      .join('');
+    languages = `<line x1="40" y1="${ly - 6}" x2="${W - 40}" y2="${ly - 6}" stroke="${c.faint}"/><text x="40" y="${ly + 22}" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="3" fill="${c.muted}">TOP LANGUAGES</text>${parts}`;
+    H = ly + 96;
+  }
 
   const css = `
 .frame{animation:fade 1s ease-out both}
 .ro{animation:rise .9s ${EXPO} both}
-.bar{transform-box:fill-box;transform-origin:bottom;animation:growY 1s ${EXPO} both}
+.col{animation:fade .6s ease-out both}
+.ring{stroke-dasharray:340;animation:ring 1.4s ease-out .4s both}
 .seg{transform-box:fill-box;transform-origin:left center;animation:growX 1s ${EXPO} both}
 @keyframes fade{from{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
-@keyframes growY{from{transform:scaleY(0)}}
+@keyframes ring{from{stroke-dashoffset:340}}
 @keyframes growX{from{transform:scaleX(0)}}
 ${REDUCED}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
-    `GitHub stats: ${fmt(n.stars)} stars, ${fmt(profile.commits || 0)} commits, ${fmt(profile.pullRequests || 0)} pull requests, ${fmt(profile.issues || 0)} issues, contributed to ${fmt(profile.contributedTo || 0)} repositories. Current streak ${current} days, longest ${n.streak} days, ${fmt(n.total)} contributions in 12 months. Busiest month ${months[busiest]?.label || ''}.`
+    `GitHub stats: ${fmt(allTotal)} total contributions, current streak ${cur.len} days, longest streak ${longest.len} days. ${fmt(n.total)} contributions in the last 12 months, ${fmt(profile.commits || 0)} commits, ${fmt(profile.pullRequests || 0)} pull requests, ${fmt(profile.issues || 0)} issues, ${fmt(n.stars)} stars, ${fmt(profile.publicRepos || 0)} public repositories.`
   )}">
 <style>${css}</style>
 <g class="frame">
@@ -401,16 +488,18 @@ ${REDUCED}`;
   <text x="40" y="46" font-family="${MONO}" font-size="16" font-weight="700" letter-spacing="3" fill="${c.hud}">GITHUB  STATS</text>
   <text x="${W - 40}" y="46" text-anchor="end" font-family="${MONO}" font-size="14" font-weight="700" letter-spacing="2" fill="${c.muted}">${escapeXml(missionName.toUpperCase())}  ·  @${escapeXml(profile.login.toUpperCase())}</text>
   <line x1="40" y1="64" x2="${W - 40}" y2="64" stroke="${c.faint}"/>
-  <line x1="425" y1="84" x2="425" y2="332" stroke="${c.faint}"/>
-  <line x1="795" y1="84" x2="795" y2="332" stroke="${c.faint}"/>
-  <line x1="40" y1="350" x2="${W - 40}" y2="350" stroke="${c.faint}"/>
-  ${title(c1, 'OVERVIEW')}${title(c2, 'STREAK')}${title(c3, 'TOP LANGUAGES')}
-  <text x="40" y="378" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="3" fill="${c.muted}">ACTIVITY  ·  CONTRIBUTIONS PER MONTH</text>
+  <line x1="413" y1="92" x2="413" y2="268" stroke="${c.faint}"/>
+  <line x1="787" y1="92" x2="787" y2="268" stroke="${c.faint}"/>
+  <line x1="40" y1="290" x2="${W - 40}" y2="290" stroke="${c.faint}"/>
+  <text x="40" y="318" font-family="${MONO}" font-size="13" font-weight="700" letter-spacing="3" fill="${c.muted}">CONTRIBUTIONS  ·  LAST 12 MONTHS</text>
+  ${monthLabels}
+  <line x1="40" y1="${dividerY}" x2="${W - 40}" y2="${dividerY}" stroke="${c.faint}"/>
 </g>
-${overview}
-${streak}
+${streakCard}
+${cells}
+${legend}
+${figureSvg}
 ${languages}
-${bars}
 </svg>`;
 }
 

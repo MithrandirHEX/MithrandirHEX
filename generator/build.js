@@ -41,6 +41,44 @@ query ($login: String!) {
 
 const toRepo = (r) => ({ name: r.name, description: r.description || '', url: r.url, stars: r.stargazerCount, language: r.primaryLanguage?.name || '' });
 
+// All-time totals and streaks need the calendar of every year since the account was created: one aliased
+// field per year, in a single request. If it fails the stats card simply falls back to the last 12 months.
+async function fetchAllTime(createdAt) {
+  try {
+    const first = new Date(createdAt).getUTCFullYear();
+    const thisYear = new Date().getUTCFullYear();
+    const years = [];
+    for (let y = Math.max(first, thisYear - 14); y <= thisYear; y += 1) years.push(y);
+    const now = new Date().toISOString();
+    const fields = years
+      .map(
+        (y) =>
+          `y${y}: contributionsCollection(from: "${y}-01-01T00:00:00Z", to: "${y === thisYear ? now : `${y}-12-31T23:59:59Z`}") { contributionCalendar { totalContributions weeks { contributionDays { date contributionCount } } } }`
+      )
+      .join('\n');
+    const res = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, 'Content-Type': 'application/json', Accept: 'application/vnd.github+json' },
+      body: JSON.stringify({ query: `query ($login: String!) { user(login: $login) { ${fields} } }`, variables: { login } }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.errors?.length || !data.data?.user) throw new Error(data.errors?.[0]?.message || data.message || res.status);
+    const byDate = new Map();
+    let total = 0;
+    for (const y of years) {
+      const cal = data.data.user[`y${y}`].contributionCalendar;
+      total += cal.totalContributions;
+      // Calendar weeks spill into neighbouring years with zeros, so keep the larger count per date.
+      for (const w of cal.weeks) for (const d of w.contributionDays) byDate.set(d.date, Math.max(byDate.get(d.date) || 0, d.contributionCount));
+    }
+    const days = [...byDate].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([date, count]) => ({ date, count }));
+    return { total, days };
+  } catch (err) {
+    console.warn(`All-time stats unavailable (${err.message}); using the last 12 months.`);
+    return null;
+  }
+}
+
 async function fetchLive() {
   const token = process.env.GH_TOKEN;
   if (!token) throw new Error('GH_TOKEN is not set');
@@ -67,6 +105,8 @@ async function fetchLive() {
   const total = [...bytes.values()].reduce((a, b) => a + b, 0) || 1;
   const languages = [...bytes].sort((a, b) => b[1] - a[1]).map(([name, size]) => ({ name, share: size / total }));
 
+  const allTime = await fetchAllTime(u.createdAt);
+
   const days = u.contributionsCollection.contributionCalendar.weeks
     .flatMap((w) => w.contributionDays)
     .map((d) => ({ date: d.date, count: d.contributionCount }));
@@ -79,6 +119,8 @@ async function fetchLive() {
     email: u.email || '',
     links: linksFromGitHub(u.twitterUsername, u.socialAccounts.nodes),
     joinedYear: new Date(u.createdAt).getFullYear(),
+    createdAt: u.createdAt.slice(0, 10),
+    allTime,
     followers: u.followers.totalCount,
     commits: u.contributionsCollection.totalCommitContributions,
     pullRequests: u.contributionsCollection.totalPullRequestContributions,
@@ -107,6 +149,7 @@ function fetchSample() {
   });
   return {
     login, name: login, headline: '', website: '', email: '', links: [], joinedYear: new Date().getFullYear() - 1,
+    createdAt: days[0].date, allTime: { total: days.reduce((s, d) => s + d.count, 0), days },
     followers: 0, totalStars: 0, repos: [], featured: [],
     commits: 120, pullRequests: 7, issues: 3, contributedTo: 5, publicRepos: 4,
     repoPoints: ['recon-notes', 'exploit-lab', 'fuzz-harness', 'writeups'].map((name, i) => ({ name, stars: i * 3 })), languages: [{ name: 'Python', share: 1 }],
