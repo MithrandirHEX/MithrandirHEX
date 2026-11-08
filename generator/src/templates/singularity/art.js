@@ -203,11 +203,22 @@ export function heroSvg(profile, themeName, { missionName }) {
 .hud{animation:fade 1.2s ease-out 2s both}
 .spin{animation-name:spin;animation-timing-function:linear;animation-iteration-count:infinite}
 .s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}.s3{animation-duration:90s}.tw{animation:twinkle 4.5s ease-in-out infinite}
+.n1{animation:drift1 52s ease-in-out infinite alternate}.n2{animation:drift2 67s ease-in-out infinite alternate}.n3{animation:drift3 44s ease-in-out infinite alternate}
+.shoot{opacity:0;animation-timing-function:linear;animation-iteration-count:infinite}
+.sa{animation-name:shootA}.sb{animation-name:shootB}.sc{animation-name:shootC}
+.cursor{animation:blink 1.1s steps(1,end) infinite}
 @keyframes fade{from{opacity:0}}
 @keyframes barTop{from{transform:translateY(-${BAR}px)}}
 @keyframes barBot{from{transform:translateY(${BAR}px)}}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes drift1{to{transform:translate(90px,34px)}}
+@keyframes drift2{to{transform:translate(-80px,-30px)}}
+@keyframes drift3{to{transform:translate(50px,26px)}}
+@keyframes shootA{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(520px,226px)}7%,100%{opacity:0;transform:translate(560px,243px)}}
+@keyframes shootB{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}5%{opacity:1;transform:translate(420px,182px)}6%,100%{opacity:0;transform:translate(450px,195px)}}
+@keyframes shootC{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(470px,204px)}7%,100%{opacity:0;transform:translate(505px,219px)}}
+@keyframes blink{0%,49%{fill-opacity:1}50%,100%{fill-opacity:0}}
 ${REDUCED}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(`${profile.name || profile.login} — ${profile.headline || ''}. A black hole whose accretion disk is made of ${fmt(n.total)} contributions, one particle per day.`)}">
@@ -225,6 +236,12 @@ ${REDUCED}`;
   </radialGradient>
   <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
   <filter id="diskGlow" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="14 3"/></filter>
+  <radialGradient id="neb1"><stop offset="0" stop-color="${c.haze}" stop-opacity="0.22"/><stop offset="1" stop-color="${c.haze}" stop-opacity="0"/></radialGradient>
+  <radialGradient id="neb2"><stop offset="0" stop-color="#7a3f6b" stop-opacity="0.28"/><stop offset="1" stop-color="#7a3f6b" stop-opacity="0"/></radialGradient>
+  <radialGradient id="neb3"><stop offset="0" stop-color="${c.diskLo}" stop-opacity="0.3"/><stop offset="1" stop-color="${c.diskLo}" stop-opacity="0"/></radialGradient>
+  <linearGradient id="shootTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-120" y2="-52">
+    <stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/>
+  </linearGradient>
   <g id="rings">${rings}</g>
   <g id="b0" fill="none" stroke-linecap="round">${bands[0]}</g>
   <g id="b1" fill="none" stroke-linecap="round">${bands[1]}</g>
@@ -233,8 +250,21 @@ ${REDUCED}`;
   <rect width="${W}" height="${H}" fill="${c.bg}"/>
   <g class="scene">
     <rect width="${W}" height="${H}" fill="url(#haze)"/>
+    <!-- Nebula: three soft clouds that drift slowly behind everything else, each on its own period. -->
+    <g aria-hidden="true">
+      <ellipse class="n1" cx="${cx - 330}" cy="${cy - 70}" rx="380" ry="200" fill="url(#neb1)"/>
+      <ellipse class="n2" cx="${cx + 390}" cy="${cy + 140}" rx="340" ry="180" fill="url(#neb2)"/>
+      <ellipse class="n3" cx="${cx + 40}" cy="${cy - 190}" rx="430" ry="150" fill="url(#neb3)"/>
+    </g>
     <g fill="${c.star}">${stars}</g>
     ${twinklers}
+    <!-- Shooting stars: each streaks across for about a second and then stays dark for a long while. The three
+         have different cycle lengths (23 s, 31 s, 41 s) so they never fall into a rhythm. -->
+    <g aria-hidden="true">
+      <g transform="translate(110 118)"><g class="shoot sa" style="animation-duration:23s;animation-delay:5s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.8" fill="${c.fg}"/></g></g>
+      <g transform="translate(720 96)"><g class="shoot sb" style="animation-duration:31s;animation-delay:13s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.8" fill="${c.fg}"/></g></g>
+      <g transform="translate(1090 150) scale(-1 1)"><g class="shoot sc" style="animation-duration:41s;animation-delay:24s"><line x1="0" y1="0" x2="-120" y2="-52" stroke="url(#shootTail)" stroke-width="2.4" stroke-linecap="round"/><circle r="2.8" fill="${c.fg}"/></g></g>
+    </g>
     <g mask="url(#doppler)">
       <!-- Gravitational lensing: the far side of the disk is bent into a thick band over the top
            of the shadow and a thin one beneath it. -->
@@ -249,7 +279,7 @@ ${REDUCED}`;
     ${disk('back')}    <circle cx="${cx}" cy="${cy}" r="${Rs}" fill="${c.shadow}"/>
     <circle cx="${cx}" cy="${cy}" r="${Rs * 1.05}" fill="none" stroke="${c.diskHi}" stroke-width="2" stroke-opacity="0.9" mask="url(#doppler)"/>
     ${disk('front')}    <text class="title" x="${cx + tracking / 2}" y="568" text-anchor="middle" font-family="${THIN}" font-weight="600" font-size="${nameSize}" letter-spacing="${r1(tracking)}" fill="${c.fg}">${escapeXml(name)}</text>
-    ${sub ? `<text class="sub" x="${cx + 2}" y="612" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="20" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}</text>` : ''}
+    ${sub ? `<text class="sub" x="${cx + 2}" y="612" text-anchor="middle" font-family="${THIN}" font-weight="500" font-size="20" letter-spacing="2" fill="${c.muted}">${escapeXml(sub)}<tspan class="cursor" dx="4" fill="${c.hud}">_</tspan></text>` : ''}
   </g>
   <g class="bar-top">
     <rect width="${W}" height="${BAR}" fill="${c.bar}"/>
