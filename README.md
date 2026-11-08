@@ -1,11 +1,11 @@
-<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 21 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
+<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 22 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
 
 <p align="center"><b>MithrandirHEX</b> · Security Researcher</p>
 
 
-### 🛰️ About Me
+## 🛰️ About Me
 
-🔐 **Security Researcher**
+### 🔐 Security Researcher
 
 > 🔎 Passionate about uncovering software vulnerabilities, analyzing binaries, and simulating real-world attacks.
 
@@ -21,13 +21,13 @@
 <tr><td>📡 <b>Connect</b></td><td>Facebook: (...............)</td></tr>
 </table>
 
-#### Languages & Tools
+## 🧰 Languages & Tools
 
 <p align="center"><img alt="Languages and tools: C, C++, Python, Assembly, (.......), Linux." src="./assets/singularity-arsenal-dark.svg" width="100%"></p>
 
-#### Recon
+## 📊 Recon
 
-<p align="center"><img alt="Recon stats for Operation Zero: 21 contributions in the last 12 months, 19 commits, 0 pull requests, 1 active days, longest streak 1 days, 1 public repositories, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
+<p align="center"><img alt="Recon stats for Operation Zero: 22 contributions in the last 12 months, 20 commits, 0 pull requests, 1 active days, longest streak 1 days, 1 public repositories, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
 
 <details>
 <summary><sub>How to read the graphics</sub></summary>
