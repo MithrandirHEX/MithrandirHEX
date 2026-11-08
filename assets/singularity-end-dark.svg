@@ -10,7 +10,7 @@
   <radialGradient id="sun" cx="600" cy="134" r="420" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 134) scale(1 0.32) translate(-600 -134)">
     <stop offset="0" stop-color="#fff4e2" stop-opacity="0.95"/><stop offset="0.25" stop-color="#ffb257" stop-opacity="0.45"/><stop offset="1" stop-color="#ffb257" stop-opacity="0"/>
   </radialGradient>
-  <linearGradient id="limb" x1="0" x2="1"><stop offset="0" stop-color="#7dd3fc" stop-opacity="0"/><stop offset="0.5" stop-color="#7dd3fc" stop-opacity="0.9"/><stop offset="1" stop-color="#7dd3fc" stop-opacity="0"/></linearGradient>
+  <linearGradient id="limb" x1="0" x2="1"><stop offset="0" stop-color="#ffb257" stop-opacity="0"/><stop offset="0.5" stop-color="#ffb257" stop-opacity="0.9"/><stop offset="1" stop-color="#ffb257" stop-opacity="0"/></linearGradient>
 </defs>
 <g clip-path="url(#frame)">
   <rect width="1200" height="170" fill="#04050a"/>
