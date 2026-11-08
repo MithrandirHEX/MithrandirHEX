@@ -168,6 +168,7 @@ const profile = {
   intro: config.intro || '',
   arsenal: config.arsenal || {},
   typing: config.typing || [],
+  effects: config.effects || {},
   about: config.about || null,
   now: config.now || '',
   website: pick(config.website, live.website),

@@ -19,6 +19,16 @@
     "icons": {}
   },
 
+  "effects": {
+    "snake": true,
+    "constellation": true,
+    "replay": true,
+    "ripples": true,
+    "satellite": true,
+    "flame": true,
+    "comet": true
+  },
+
   "typing": [
     "Security Researcher",
     "Vulnerability Research",

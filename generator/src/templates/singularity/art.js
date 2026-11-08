@@ -337,6 +337,8 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   const days = profile.contributions?.days || [];
   const all = profile.allTime?.days?.length ? profile.allTime.days : days;
   const allTotal = profile.allTime ? profile.allTime.total : n.total;
+  // Each animated effect can be switched off in profile.config.json ("effects": { "snake": false, ... }).
+  const fx = { snake: true, constellation: true, replay: true, ripples: true, satellite: true, flame: true, comet: true, ...(profile.effects || {}) };
 
   const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   const dateText = (iso, year = false) => {
@@ -380,16 +382,22 @@ export function telemetrySvg(profile, themeName, { missionName }) {
   <text x="${cx}" y="244" text-anchor="middle" font-family="${MONO}" font-size="17" font-weight="700" letter-spacing="2" fill="${c.fg}">${label}</text>
   <text x="${cx}" y="270" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.muted}">${sub}</text>
 </g>`;
+  // A small satellite circles the streak ring; the longer the streak, the faster it goes (16 s a lap at
+  // zero, down to 4 s from twelve days).
+  const satDur = Math.max(4, 16 - Math.min(cur.len, 12));
+  const satellite = fx.satellite
+    ? `<g><animateTransform attributeName="transform" type="rotate" from="0 600 154" to="360 600 154" dur="${satDur}s" repeatCount="indefinite"/><circle cx="656" cy="154" r="11" fill="${c.diskMid}" fill-opacity="0.3"/><circle cx="656" cy="154" r="5" fill="${c.diskHi}"/></g>`
+    : '';
   const flame = 'M12 2c.8 3.2-1.2 4.6-2.6 6.6C8 10.6 7 12.1 7 14a5 5 0 0 0 10 0c0-2-1.1-3.4-2.1-4.6-.1 1.6-.9 2.6-1.9 2.9C13.700 9.200 13.100 5.200 12 2z';
   const streakCard = `${big(226, fmt(allTotal), 'TOTAL CONTRIBUTIONS', since, 0.4)}
 <g class="ro" style="animation-delay:0.5s">
   <circle class="ring" cx="600" cy="154" r="56" fill="none" stroke="${c.hud}" stroke-width="6" stroke-linecap="round"/>
   <circle cx="600" cy="98" r="18" fill="${c.bg}"/>
-  <path transform="translate(586 83) scale(1.16)" d="${flame}" fill="${c.hud}"/>
+  <g${fx.flame ? ' class="flame"' : ''}><path transform="translate(586 83) scale(1.16)" d="${flame}" fill="${c.hud}"/></g>
   <text x="600" y="176" text-anchor="middle" font-family="${THIN}" font-weight="700" font-size="60" fill="${c.fg}">${fmt(cur.len)}</text>
   <text x="600" y="244" text-anchor="middle" font-family="${MONO}" font-size="17" font-weight="700" letter-spacing="2" fill="${c.hud}">CURRENT STREAK</text>
   <text x="600" y="270" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" letter-spacing="1" fill="${c.muted}">${range(cur)}</text>
-</g>
+${satellite}</g>
 ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 
   // Contribution grid: one square per day, one column per week (Sunday first), five brightness levels.
@@ -435,6 +443,62 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   // of half-periods, so the loop has no seam). Every segment follows that path a little behind the one in front
   // (a negative `begin` puts it that far ahead of the tail), the body tapers towards the tail, and
   // `rotate="auto"` turns the head to face the way it is going.
+  const gridW = cols * pitch;
+  const center = (g) => [gx + g.col * pitch + cell / 2, gy + g.wd * pitch + cell / 2];
+
+  // Constellation: every active day is joined to its active neighbours (same column below, next column at the
+  // same row and the two diagonals), so runs of activity become star charts.
+  const byKey = new Map(grid.map((g) => [`${g.col},${g.wd}`, g]));
+  let links = '';
+  if (fx.constellation) {
+    for (const g of grid) {
+      if (g.count <= 0) continue;
+      for (const [dc, dw] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+        const o = byKey.get(`${g.col + dc},${g.wd + dw}`);
+        if (o && o.count > 0) {
+          const [x1, y1] = center(g);
+          const [x2, y2] = center(o);
+          links += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+        }
+      }
+    }
+    if (links) links = `<g stroke="${c.diskMid}" stroke-opacity="0.5" stroke-width="1.4" stroke-linecap="round">${links}</g>`;
+  }
+
+  // Gravitational waves: rings spread from the busiest day, three at a time, and fade as they grow.
+  let ripples = '';
+  if (fx.ripples && grid.some((g) => g.count > 0)) {
+    const peakDay = grid.reduce((b, g) => (g.count >= b.count ? g : b), grid[0]);
+    const [rx, ry] = center(peakDay);
+    ripples = [0, 1.7, 3.4]
+      .map((d) => `<circle class="rip" cx="${r1(rx)}" cy="${r1(ry)}" r="${r1(cell * 0.6)}" fill="none" stroke="${c.diskHi}" stroke-width="1.6" style="animation-delay:${d}s"/>`)
+      .join('');
+  }
+
+  // Replay: a scanning beam sweeps the grid left to right, and each active day flashes as the beam passes it,
+  // as if the year were being read back. One sweep takes 5.5 s out of a 17 s cycle.
+  const SWEEP = 5.5;
+  const PERIOD = 17;
+  let flashes = '';
+  let beam = '';
+  if (fx.replay) {
+    flashes = grid
+      .filter((g) => g.count > 0)
+      .map((g) => `<rect class="fl" x="${gx + g.col * pitch}" y="${gy + g.wd * pitch}" width="${cell}" height="${cell}" rx="3" fill="${c.fg}" style="animation-delay:${((g.col / cols) * SWEEP).toFixed(2)}s"/>`)
+      .join('');
+    beam = `<g class="beam"><rect x="${gx - 64}" y="${gy - 6}" width="64" height="${7 * pitch + 8}" fill="url(#beamTrail)"/><rect x="${gx - 2}" y="${gy - 6}" width="2.5" height="${7 * pitch + 8}" fill="${c.hud}"/></g>`;
+  }
+
+  // A rare comet crosses the grid diagonally (about two seconds in every 37).
+  const cdx = gridW + 140;
+  const cdy = 7 * pitch + 90;
+  const clen = Math.hypot(cdx, cdy);
+  const ctx = r1((-cdx / clen) * 170);
+  const cty = r1((-cdy / clen) * 170);
+  const comet = fx.comet
+    ? `<g transform="translate(${gx - 70} ${gy - 50})"><g class="comet"><line x1="0" y1="0" x2="${ctx}" y2="${cty}" stroke="url(#cometTail)" stroke-width="3" stroke-linecap="round"/><circle r="11" fill="${c.diskMid}" fill-opacity="0.3"/><circle r="3.6" fill="${c.fg}"/></g></g>`
+    : '';
+
   // The route has no pattern to spot: waypoints are drawn at random (from a seed made of the login, so the
   // route is the same every time the picture is rebuilt), first left to right and then back, each one
   // wandering up or down from the last by a random amount, then joined by a smooth closed curve.
@@ -463,7 +527,7 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
   const GAP = 6.5;
   const LAP = r1(pathLen / 150);
   const lag = (GAP / pathLen) * LAP;
-  const snake = Array.from({ length: SEG }, (_, i) => {
+  const snake = !fx.snake ? '' : Array.from({ length: SEG }, (_, i) => {
     const t = i / (SEG - 1);
     const radius = i === 0 ? 9.5 : Math.max(2.4, 8 - i * 0.26);
     const op = i === 0 ? 1 : Math.max(0.35, 0.95 - t * 0.6);
@@ -556,6 +620,11 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 .ro{animation:rise .9s ${EXPO} both}
 .col{animation:fade .6s ease-out both}
 .lit{animation:twinkle 3.6s ease-in-out infinite}
+.flame{transform-box:fill-box;transform-origin:center bottom;animation:flicker 1.7s ease-in-out infinite}
+.rip{opacity:0;transform-box:fill-box;transform-origin:center;animation:ripple 5.1s ease-out infinite}
+.fl{opacity:0;animation:flash ${PERIOD}s linear infinite}
+.beam{opacity:0;animation:sweep ${PERIOD}s linear infinite}
+.comet{opacity:0;animation:cometPass 37s linear 9s infinite}
 .ring{stroke-dasharray:352;animation:ring 1.4s ease-out .4s both}
 .seg{transform-box:fill-box;transform-origin:left center;animation:growX 1s ${EXPO} both}
 @keyframes fade{from{opacity:0}}
@@ -563,13 +632,22 @@ ${big(974, fmt(longest.len), 'LONGEST STREAK', range(longest), 0.6)}`;
 @keyframes twinkle{0%,100%{opacity:1}50%{opacity:.62}}
 @keyframes ring{from{stroke-dashoffset:352}}
 @keyframes growX{from{transform:scaleX(0)}}
+@keyframes flicker{0%,100%{transform:scale(1,1)}25%{transform:scale(1.07,.93)}50%{transform:scale(.95,1.09)}75%{transform:scale(1.04,.97)}}
+@keyframes ripple{0%{opacity:.75;transform:scale(.6)}100%{opacity:0;transform:scale(7)}}
+@keyframes flash{0%{opacity:0}1.5%{opacity:.9}6%,100%{opacity:0}}
+@keyframes sweep{0%{opacity:0;transform:translateX(0)}1%{opacity:1}${((SWEEP / PERIOD) * 100).toFixed(2)}%{opacity:1;transform:translateX(${gridW}px)}${((SWEEP / PERIOD) * 100 + 1).toFixed(2)}%,100%{opacity:0;transform:translateX(${gridW}px)}}
+@keyframes cometPass{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}6%{opacity:1;transform:translate(${cdx}px,${cdy}px)}7%,100%{opacity:0;transform:translate(${cdx}px,${cdy}px)}}
 ${REDUCED}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(
     `GitHub stats: ${fmt(allTotal)} total contributions, current streak ${cur.len} days, longest streak ${longest.len} days. ${fmt(n.total)} contributions in the last 12 months, ${fmt(profile.commits || 0)} commits, ${fmt(profile.pullRequests || 0)} pull requests, ${fmt(profile.issues || 0)} issues, ${fmt(n.stars)} stars, ${fmt(profile.publicRepos || 0)} public repositories.`
   )}">
 <style>${css}</style>
-<defs><path id="snakePath" d="${snakePath}" fill="none"/></defs>
+<defs>
+  <path id="snakePath" d="${snakePath}" fill="none"/>
+  <linearGradient id="beamTrail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c.hud}" stop-opacity="0"/><stop offset="1" stop-color="${c.hud}" stop-opacity="0.35"/></linearGradient>
+  <linearGradient id="cometTail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${ctx}" y2="${cty}"><stop offset="0" stop-color="${c.fg}" stop-opacity="0.95"/><stop offset="1" stop-color="${c.diskMid}" stop-opacity="0"/></linearGradient>
+</defs>
 <g class="frame"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" fill="${c.bg}" stroke="${c.faint}"/></g>
 <g transform="translate(0 ${-SHIFT})">
 <g class="frame">
@@ -582,7 +660,9 @@ ${REDUCED}`;
 </g>
 ${streakCard}
 ${cells}
+${links}${ripples}${flashes}${beam}
 ${snake}
+${comet}
 ${legend}
 ${figureSvg}
 ${languages}
