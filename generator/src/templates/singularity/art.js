@@ -170,23 +170,35 @@ export function heroSvg(profile, themeName, { missionName }) {
     <g class="spin s0"><use xlink:href="#b0"/></g>
     <g class="spin s1"><use xlink:href="#b1"/></g>
     <g class="spin s2"><use xlink:href="#b2"/></g>
-    <g class="spin s3"><use xlink:href="#b3"/></g>
+    <g class="spin s3">${repoDots}</g>
   </g>
 </g>`;
 
-  // Repository markers: one bright point on the disk per public repository. Each sits at a stable
-  // position derived from the repo name; more stars means a bigger point. The inverse scale cancels
-  // the disk's squash so every point stays round.
+  // Repository markers: one bright comet per public repository. It is drawn in the disk's own plane, so
+  // it bends along the orbit exactly like the daily particles do: a glowing head with a short tail trailing
+  // behind it (the disk spins towards increasing angle, so the head is the end of the arc). Its place on
+  // the disk is derived from the repo name and stays the same between runs; more stars gives a longer,
+  // thicker comet.
   const repoDots = (profile.repoPoints || [])
     .slice(0, 80)
     .map((repo) => {
       const rr = seededRandom(`repo:${repo.name}`);
       const dist = Rin + (Rout - Rin) * (0.1 + 0.8 * rr());
-      const ang = rr() * TAU;
-      const px = r1(Math.cos(ang) * dist);
-      const py = r1(Math.sin(ang) * dist);
-      const size = r1(6 + Math.min(5, Math.sqrt(repo.stars || 0) * 1.2));
-      return `<g transform="translate(${px} ${py}) scale(1 ${r1(1 / SQUASH)})"><circle r="${r1(size * 3.2)}" fill="${c.diskMid}" fill-opacity="0.16"/><circle r="${r1(size * 1.9)}" fill="${c.diskMid}" fill-opacity="0.35"/><circle r="${size}" fill="${c.diskHi}"/></g>`;
+      const a0 = rr() * TAU;
+      const root = Math.sqrt(repo.stars || 0);
+      const size = r1(4 + Math.min(4, root * 1.1));
+      const len = 0.34 + Math.min(0.18, root * 0.04);
+      const at = (a) => [r1(Math.cos(a) * dist), r1(Math.sin(a) * dist)];
+      const [x1, y1] = at(a0);
+      const [xm, ym] = at(a0 + len * 0.35);
+      const [x2, y2] = at(a0 + len);
+      const rad = r1(dist);
+      return `<g>
+  <path d="M${x1} ${y1}A${rad} ${rad} 0 0 1 ${x2} ${y2}" fill="none" stroke="${c.diskMid}" stroke-width="${r1(size * 3)}" stroke-opacity="0.28" stroke-linecap="round"/>
+  <path d="M${xm} ${ym}A${rad} ${rad} 0 0 1 ${x2} ${y2}" fill="none" stroke="${c.diskHi}" stroke-width="${r1(size * 1.3)}" stroke-opacity="0.95" stroke-linecap="round"/>
+  <circle cx="${x2}" cy="${y2}" r="${r1(size * 3.4)}" fill="${c.diskMid}" fill-opacity="0.3"/>
+  <circle cx="${x2}" cy="${y2}" r="${r1(size * 1.4)}" fill="${c.diskHi}"/>
+</g>`;
     })
     .join('');
 
@@ -204,14 +216,12 @@ export function heroSvg(profile, themeName, { missionName }) {
 .sub{animation:rise 1.6s ${EXPO} 1.6s both}
 .hud{animation:fade 1.2s ease-out 2s both}
 .spin{animation-name:spin;animation-timing-function:linear;animation-iteration-count:infinite}
-.s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}.s3{animation-duration:90s}
-.tw{animation:twinkle 4.5s ease-in-out infinite}
+.s0{animation-duration:28s}.s1{animation-duration:46s}.s2{animation-duration:76s}.s3{animation-duration:90s}.tw{animation:twinkle 4.5s ease-in-out infinite}
 @keyframes fade{from{opacity:0}}
 @keyframes barTop{from{transform:translateY(-${BAR}px)}}
 @keyframes barBot{from{transform:translateY(${BAR}px)}}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.15}}
 ${REDUCED}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(`${profile.name || profile.login} — ${profile.headline || ''}. A black hole whose accretion disk is made of ${fmt(n.total)} contributions, one particle per day.`)}">
@@ -232,9 +242,7 @@ ${REDUCED}`;
   <g id="rings">${rings}</g>
   <g id="b0" fill="none" stroke-linecap="round">${bands[0]}</g>
   <g id="b1" fill="none" stroke-linecap="round">${bands[1]}</g>
-  <g id="b2" fill="none" stroke-linecap="round">${bands[2]}</g>
-  <g id="b3">${repoDots}</g>
-</defs>
+  <g id="b2" fill="none" stroke-linecap="round">${bands[2]}</g></defs>
 <g clip-path="url(#frame)">
   <rect width="${W}" height="${H}" fill="${c.bg}"/>
   <g class="scene">
