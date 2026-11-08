@@ -1,4 +1,4 @@
-<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 13 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
+<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 14 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
 
 <p align="center"><b>MithrandirHEX</b> · Security Researcher</p>
 
@@ -9,7 +9,7 @@
 
 #### Telemetry
 
-<p align="center"><img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 13 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
+<p align="center"><img alt="Mission telemetry for Operation Zero: 1 years on GitHub, 14 contributions in the last 12 months, 1 active days, longest streak 1 days, 0 stars, 0 followers." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
 
 <details>
 <summary><sub>Reading the instruments</sub></summary>
