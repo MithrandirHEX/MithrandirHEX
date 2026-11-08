@@ -17,6 +17,7 @@ query ($login: String!) {
   user(login: $login) {
     login name bio websiteUrl twitterUsername email createdAt
     followers { totalCount }
+    repositoriesContributedTo(first: 1, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, REPOSITORY]) { totalCount }
     socialAccounts(first: 10) { nodes { provider url } }
     pinnedItems(first: 6, types: REPOSITORY) {
       nodes { ... on Repository { name description url stargazerCount primaryLanguage { name } } }
@@ -32,7 +33,7 @@ query ($login: String!) {
       nodes { name stargazerCount isFork }
     }
     contributionsCollection {
-      totalCommitContributions totalPullRequestContributions
+      totalCommitContributions totalPullRequestContributions totalIssueContributions
       contributionCalendar { totalContributions weeks { contributionDays { date contributionCount } } }
     }
   }
@@ -81,6 +82,8 @@ async function fetchLive() {
     followers: u.followers.totalCount,
     commits: u.contributionsCollection.totalCommitContributions,
     pullRequests: u.contributionsCollection.totalPullRequestContributions,
+    issues: u.contributionsCollection.totalIssueContributions,
+    contributedTo: u.repositoriesContributedTo.totalCount,
     publicRepos: u.allRepos.nodes.length,
     totalStars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     repos: candidates,
@@ -105,7 +108,7 @@ function fetchSample() {
   return {
     login, name: login, headline: '', website: '', email: '', links: [], joinedYear: new Date().getFullYear() - 1,
     followers: 0, totalStars: 0, repos: [], featured: [],
-    commits: 120, pullRequests: 7, publicRepos: 4,
+    commits: 120, pullRequests: 7, issues: 3, contributedTo: 5, publicRepos: 4,
     repoPoints: ['recon-notes', 'exploit-lab', 'fuzz-harness', 'writeups'].map((name, i) => ({ name, stars: i * 3 })), languages: [{ name: 'Python', share: 1 }],
     contributions: { total: days.reduce((s, d) => s + d.count, 0), days },
   };
