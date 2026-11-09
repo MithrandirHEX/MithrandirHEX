@@ -1,4 +1,4 @@
-<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 31 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
+<p align="center"><img alt="MithrandirHEX: Security Researcher. Cinematic title card: a black hole whose accretion disk is drawn from 35 contributions, one particle per day." src="./assets/singularity-hero-dark.svg" width="100%"></p>
 
 <p align="center"><b>MithrandirHEX</b> · Security Researcher</p>
 
@@ -35,7 +35,7 @@
 
 ## 📊 GitHub Stats
 
-<p align="center"><img alt="GitHub stats for Operation Zero: 0 stars, 29 commits, 0 pull requests, 0 issues, 31 contributions in the last 12 months, longest streak 1 days." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
+<p align="center"><img alt="GitHub stats for Operation Zero: 0 stars, 33 commits, 0 pull requests, 0 issues, 35 contributions in the last 12 months, longest streak 2 days." src="./assets/singularity-telemetry-dark.svg" width="100%"></p>
 
 <details>
 <summary><sub>How to read the graphics</sub></summary>
